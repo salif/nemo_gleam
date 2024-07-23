@@ -94,6 +94,31 @@ pub fn get_msg() -> fn(String) -> String {
                "Publish the project to the Hex package manager",
                "Публикуване на проекта в Hex",
             ),
+            #(
+               "Export something useful from the Gleam project",
+               "Експортиране на нещо полезно от проекта",
+            ),
+            #(
+               "Information on the modules, functions, and types in the project in JSON format",
+               "Информация за модулите, функциите и типовете в проекта в JSON формат",
+            ),
+            #(
+               "The path to write the JSON file to",
+               "Пътят за запис на JSON файла",
+            ),
+            #("Work with the Hex package manager", "Работа с Hex"),
+            #(
+               "Retire a release from Hex",
+               "Оттегляне на издание от Hex",
+            ),
+            #(
+               "Un-retire a release from Hex",
+               "Отмяна на оттеглане на издание от Hex",
+            ),
+            #(
+               "Revert a release from Hex",
+               "Връщане на издание от Hex",
+            ),
          ]),
       ])
    fn(str: String) -> String { aham.get(msgs, str) }

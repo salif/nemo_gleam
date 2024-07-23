@@ -34,10 +34,10 @@ fn actions(path: String, msg: fn(String) -> String) -> Nil {
       |> gu.add_extra_button("remove")
       |> gu.add_extra_button("publish")
       |> gu.add_extra_button("new")
-      // |> gu.add_extra_button("hex")
+      |> gu.add_extra_button("hex")
       |> gu.add_extra_button("format")
       |> gu.add_extra_button("fix")
-      // |> gu.add_extra_button("export")
+      |> gu.add_extra_button("export")
       |> gu.add_extra_button("docs")
       |> gu.add_extra_button("deps")
       |> gu.add_extra_button("clean")
@@ -58,10 +58,10 @@ fn actions(path: String, msg: fn(String) -> String) -> Nil {
                   "clean" -> action_clean(path)
                   "deps" -> action_deps(path, msg)
                   "docs" -> action_docs(path, msg)
-                  // "export" -> do_action.alert(1, msg("Not supported yet"))
+                  "export" -> action_export(path, msg)
                   "fix" -> do_action.do_action(["fix", "gleam"], path)
                   "format" -> action_format(path, msg)
-                  // "hex" -> do_action.alert(1, msg("Not supported yet"))
+                  "hex" -> action_hex(path, msg)
                   "new" -> action_new.action_new(path, msg)
                   "publish" -> action_publish(path, msg)
                   "remove" -> action_remove(path, msg)
@@ -245,6 +245,61 @@ fn action_docs_remove(path: String, msg: fn(String) -> String) -> Nil {
    }
 }
 
+fn action_export(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Export something useful from the Gleam project"))
+      |> gu.add_combo_and_values(msg("Command"), values: [
+         "erlang-shipment", "hex-tarball", "javascript-prelude",
+         "typescript-prelude", "package-interface",
+      ])
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse(out) {
+            "erlang-shipment" ->
+               do_action.do_action(["erlang-shipment", "export", "gleam"], path)
+            "hex-tarball" ->
+               do_action.do_action(["hex-tarball", "export", "gleam"], path)
+            "javascript-prelude" -> {
+               do_action.alert(1, msg("Not supported yet"))
+            }
+            "typescript-prelude" -> {
+               do_action.alert(1, msg("Not supported yet"))
+            }
+            "package-interface" -> action_export_package_interface(path, msg)
+            _ -> do_action.alert(1, msg("Not supported yet"))
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_export_package_interface(
+   path: String,
+   msg: fn(String) -> String,
+) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg(
+         "Information on the modules, functions, and types in the project in JSON format",
+      ))
+      |> gu.add_entry(msg("The path to write the JSON file to"))
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         let output: String = gu.parse(out)
+         do_action.do_action(
+            ["package-interface", "export", "gleam"]
+               |> gu.add_opt_if(!string.is_empty(output), output, "out"),
+            path,
+         )
+      }
+      Error(_) -> Nil
+   }
+}
+
 fn action_format(path: String, msg: fn(String) -> String) -> Nil {
    let out: gu.GuResult =
       gu.zenity
@@ -278,6 +333,111 @@ fn action_format(path: String, msg: fn(String) -> String) -> Nil {
             }
             _ -> do_action.alert(1, msg("Invalid output: ") <> out)
          }
+      Error(_) -> Nil
+   }
+}
+
+fn action_hex(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Work with the Hex package manager"))
+      |> gu.add_combo_and_values(msg("Command"), values: [
+         "retire", "unretire", "revert",
+      ])
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse(out) {
+            "retire" -> action_hex_retire(path, msg)
+            "unretire" -> action_hex_unretire(path, msg)
+            "revert" -> action_hex_revert(path, msg)
+            _ -> do_action.alert(1, msg("Not supported yet"))
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_hex_retire(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Retire a release from Hex"))
+      |> gu.add_entry("<PACKAGE>")
+      |> gu.add_entry("<VERSION>")
+      |> gu.add_combo_and_values("<REASON>", values: [
+         "other", "invalid", "security", "deprecated", "renamed",
+      ])
+      |> gu.add_entry("[MESSAGE]")
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         case gu.parse_list(out, "|") {
+            [package, version, reason, message] ->
+               do_action.do_action(
+                  ["retire", "hex", "gleam"]
+                     |> gu.add_value(package)
+                     |> gu.add_value(version)
+                     |> gu.add_value(reason)
+                     |> gu.add_value_if(!string.is_empty(message), message),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      }
+      Error(_) -> Nil
+   }
+}
+
+fn action_hex_unretire(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Un-retire a release from Hex"))
+      |> gu.add_entry("<PACKAGE>")
+      |> gu.add_entry("<VERSION>")
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         case gu.parse_list(out, "|") {
+            [package, version] ->
+               do_action.do_action(
+                  ["unretire", "hex", "gleam"]
+                     |> gu.add_value(package)
+                     |> gu.add_value(version),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      }
+      Error(_) -> Nil
+   }
+}
+
+fn action_hex_revert(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Revert a release from Hex"))
+      |> gu.add_entry("--package")
+      |> gu.add_entry("--version")
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         case gu.parse_list(out, "|") {
+            [package, version] ->
+               do_action.do_action(
+                  ["revert", "hex", "gleam"]
+                     |> gu.add_opt(Some(package), "package")
+                     |> gu.add_opt(Some(version), "version"),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      }
       Error(_) -> Nil
    }
 }

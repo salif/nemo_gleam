@@ -2,12 +2,8 @@ name = "nemo_gleam"
 version = "1.0.0"
 
 description = "Nemo extension for Gleam"
-# licences = ["Apache-2.0"]
-# repository = { type = "github", user = "", repo = "" }
-# links = [{ title = "Website", href = "" }]
-#
-# For a full reference of all the available options, you can have a look at
-# https://gleam.run/writing-gleam/gleam-toml/.
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "salif", repo = "nemo_gleam" }
 
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
