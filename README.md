@@ -5,6 +5,8 @@
 
 ## Install
 
+Requires [zenity](https://gitlab.gnome.org/GNOME/zenity).
+
 ```sh
 gleam export erlang-shipment
 

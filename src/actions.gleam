@@ -1,3 +1,4 @@
+import action_new
 import do_action
 import gleam/list
 import gleam/option.{Some}
@@ -25,23 +26,23 @@ pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
          ellipsize: False,
       )
       |> gu.new_question_opts(default_cancel: False, switch: True)
-      |> gu.add_extra_button("Cancel")
+      |> gu.add_extra_button(msg("Close"))
       |> gu.add_extra_button("help")
       |> gu.add_extra_button("update")
       |> gu.add_extra_button("test")
       |> gu.add_extra_button("run")
       |> gu.add_extra_button("remove")
-      |> gu.add_extra_button("publish")
+      // |> gu.add_extra_button("publish")
       |> gu.add_extra_button("new")
-      |> gu.add_extra_button("hex")
+      // |> gu.add_extra_button("hex")
       |> gu.add_extra_button("format")
       |> gu.add_extra_button("fix")
-      |> gu.add_extra_button("export")
-      |> gu.add_extra_button("docs")
-      |> gu.add_extra_button("deps")
+      // |> gu.add_extra_button("export")
+      // |> gu.add_extra_button("docs")
+      // |> gu.add_extra_button("deps")
       |> gu.add_extra_button("clean")
-      |> gu.add_extra_button("check")
-      |> gu.add_extra_button("build")
+      // |> gu.add_extra_button("check")
+      // |> gu.add_extra_button("build")
       |> gu.add_extra_button("add")
       |> gu.set_timeout(30)
       |> gu.show_in(path, err: False)
@@ -52,24 +53,27 @@ pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
             False -> {
                case gu.parse(out) {
                   "add" -> action_add(path, msg)
-                  "build" -> do_action.alert(1, msg("Not supported yet"))
-                  "check" -> do_action.alert(1, msg("Not supported yet"))
-                  "clean" -> do_action.alert(1, msg("Not supported yet"))
-                  "deps" -> do_action.alert(1, msg("Not supported yet"))
-                  "docs" -> do_action.alert(1, msg("Not supported yet"))
-                  "export" -> do_action.alert(1, msg("Not supported yet"))
-                  "fix" -> do_action.alert(1, msg("Not supported yet"))
-                  "format" -> do_action.alert(1, msg("Not supported yet"))
-                  "hex" -> do_action.alert(1, msg("Not supported yet"))
-                  "new" -> do_action.alert(1, msg("Not supported yet"))
-                  "publish" -> do_action.alert(1, msg("Not supported yet"))
-                  "remove" -> do_action.alert(1, msg("Not supported yet"))
+                  // "build" -> do_action.alert(1, msg("Not supported yet"))
+                  // "check" -> do_action.alert(1, msg("Not supported yet"))
+                  "clean" -> action_clean(path)
+                  // "deps" -> do_action.alert(1, msg("Not supported yet"))
+                  // "docs" -> do_action.alert(1, msg("Not supported yet"))
+                  // "export" -> do_action.alert(1, msg("Not supported yet"))
+                  "fix" -> do_action.do_action(["fix", "gleam"], path)
+                  "format" -> action_format(path, msg)
+                  // "hex" -> do_action.alert(1, msg("Not supported yet"))
+                  "new" -> action_new.action_new(path, msg)
+                  // "publish" -> do_action.alert(1, msg("Not supported yet"))
+                  "remove" -> action_remove(path, msg)
                   "run" -> action_run(path, msg)
                   "test" -> action_test(path, msg)
                   "update" -> do_action.do_action(["update", "gleam"], path)
                   "help" -> do_action.do_action(["help", "gleam"], path)
-                  "Cancel" -> Nil
-                  _ -> do_action.alert(1, out)
+                  d ->
+                     case d == msg("Close") {
+                        True -> Nil
+                        False -> do_action.alert(1, d)
+                     }
                }
             }
          }
@@ -84,7 +88,7 @@ fn action_add(path: String, msg: fn(String) -> String) -> Nil {
       |> gu.set_text(msg("Add new project dependencies"))
       |> gu.add_entry(msg("The names of Hex packages to add"))
       |> gu.add_combo_and_values(
-         msg(msg("Add the packages as dev-only dependencies")),
+         msg("Add the packages as dev-only dependencies"),
          values: [msg("no"), msg("yes")],
       )
       |> gu.set_separator("|")
@@ -96,11 +100,78 @@ fn action_add(path: String, msg: fn(String) -> String) -> Nil {
                do_action.do_action(
                   ["add", "gleam"]
                      |> gu.add_bool(dev == msg("yes"), "dev")
-                     |> gu.add_value(packages),
+                     |> gu.add_value_if(!string.is_empty(packages), packages),
                   path,
                )
             _ -> do_action.alert(1, msg("Invalid output: ") <> out)
          }
+      Error(_) -> Nil
+   }
+}
+
+fn action_clean(path: String) -> Nil {
+   case
+      ["clean", "gleam"]
+      |> gu.show_in(path, err: True)
+   {
+      Ok(_) -> Nil
+      Error(err) -> do_action.alert(err.0, err.1)
+   }
+}
+
+fn action_format(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Format source code"))
+      |> gu.add_entry(msg("Files to format"))
+      |> gu.add_combo_and_values(msg("Read source from STDIN"), values: [
+         msg("no"),
+         msg("yes"),
+      ])
+      |> gu.add_combo_and_values(
+         msg("Check if inputs are formatted without changing them"),
+         values: [msg("no"), msg("yes")],
+      )
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [files, stdin, check] -> {
+               case
+                  ["format", "gleam"]
+                  |> gu.add_bool(stdin == msg("yes"), "stdin")
+                  |> gu.add_bool(check == msg("yes"), "check")
+                  |> gu.add_value_if(!string.is_empty(files), files)
+                  |> gu.show_in(path, err: True)
+               {
+                  Ok(_) -> Nil
+                  Error(err) -> do_action.alert(err.0, err.1)
+               }
+            }
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_remove(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Remove project dependencies"))
+      |> gu.add_entry(msg("The names of packages to remove"))
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         let packages: String = gu.parse(out)
+         do_action.do_action(
+            ["remove", "gleam"]
+               |> gu.add_value_if(!string.is_empty(packages), packages),
+            path,
+         )
+      }
       Error(_) -> Nil
    }
 }

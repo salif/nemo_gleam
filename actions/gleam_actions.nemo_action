@@ -56,7 +56,7 @@ Extensions=any;
 
 #Conditions=desktop;
 
-Terminal=false
+Terminal=true
 
 # Uri scheme - provide a uri scheme that the current location's scheme must match
 # For example:
