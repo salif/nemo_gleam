@@ -1,8 +1,8 @@
 import aham
 import locale
 
-pub fn get_msg() {
-   let msgs =
+pub fn get_msg() -> fn(String) -> String {
+   let msgs: aham.Aham =
       aham.new_with_values()
       |> aham.auto_add_bundle(locale.get_locale(), [
          #("bg", "BG", [

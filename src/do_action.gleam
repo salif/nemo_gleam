@@ -18,3 +18,10 @@ pub fn alert(alert_type: Int, text: String) -> Nil {
       |> gu.show(True)
    Nil
 }
+
+pub fn do_action(cmd: List(String), path: String) -> Nil {
+   case gu.show_in(cmd, path, err: True) {
+      Ok(val) -> alert(0, val)
+      Error(err) -> alert(err.0, err.1)
+   }
+}

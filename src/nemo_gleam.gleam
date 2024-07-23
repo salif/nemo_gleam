@@ -1,7 +1,7 @@
 import action_new
 import actions
-import alert
 import argv
+import do_action
 import msgs
 
 pub fn main() {
@@ -10,17 +10,15 @@ pub fn main() {
       ["new", ..rest] -> action_new.run(rest, msg)
       ["actions", ..rest] -> actions.run(rest, msg)
       _ ->
-         alert.alert(
+         do_action.alert(
             0,
             msg("Usage:")
                <> " gleam-action <COMMAND>"
                <> "\n\n"
                <> msg("Commands:")
-               <> "\n"
-               <> "  new\t\t"
+               <> "\n  new\t\t"
                <> msg("Create a new project")
-               <> "\n"
-               <> "  actions\t\t"
+               <> "\n  actions\t\t"
                <> msg("Actions"),
          )
    }

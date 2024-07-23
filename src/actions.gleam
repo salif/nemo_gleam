@@ -1,4 +1,4 @@
-import alert
+import do_action
 import gleam/list
 import gleam/option.{Some}
 import gleam/string
@@ -8,12 +8,12 @@ pub fn run(args: List(String), msg: fn(String) -> String) -> Nil {
    case list.first(args) {
       Ok(path) -> actions(path, msg)
       Error(Nil) ->
-         alert.alert(0, msg("Usage:") <> " gleam-action actions <PATH>")
+         do_action.alert(0, msg("Usage:") <> " gleam-action actions <PATH>")
    }
 }
 
-pub fn actions(path: string, msg: fn(String) -> String) -> Nil {
-   let out: Result(String, #(Int, String)) =
+pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
       gu.zenity
       |> gu.new_question()
       |> gu.set_title(msg("Gleam Actions"))
@@ -25,16 +25,15 @@ pub fn actions(path: string, msg: fn(String) -> String) -> Nil {
          ellipsize: False,
       )
       |> gu.new_question_opts(default_cancel: False, switch: True)
+      |> gu.add_extra_button("Cancel")
+      |> gu.add_extra_button("help")
       |> gu.add_extra_button("update")
       |> gu.add_extra_button("test")
-      |> gu.add_extra_button("shell")
       |> gu.add_extra_button("run")
       |> gu.add_extra_button("remove")
       |> gu.add_extra_button("publish")
       |> gu.add_extra_button("new")
-      |> gu.add_extra_button("lsp")
       |> gu.add_extra_button("hex")
-      |> gu.add_extra_button("help")
       |> gu.add_extra_button("format")
       |> gu.add_extra_button("fix")
       |> gu.add_extra_button("export")
@@ -44,16 +43,33 @@ pub fn actions(path: string, msg: fn(String) -> String) -> Nil {
       |> gu.add_extra_button("check")
       |> gu.add_extra_button("build")
       |> gu.add_extra_button("add")
-      |> gu.show(err: False)
+      |> gu.set_timeout(30)
+      |> gu.show_in(path, err: False)
    case out {
       Ok(out) | Error(#(_, out)) -> {
          case string.is_empty(out) {
             True -> Nil
             False -> {
-               let cmd = gu.parse(out)
-               case cmd {
-                  "add" -> action_add(msg)
-                  _ -> alert.alert(1, msg("Not supported yet"))
+               case gu.parse(out) {
+                  "add" -> action_add(path, msg)
+                  "build" -> do_action.alert(1, msg("Not supported yet"))
+                  "check" -> do_action.alert(1, msg("Not supported yet"))
+                  "clean" -> do_action.alert(1, msg("Not supported yet"))
+                  "deps" -> do_action.alert(1, msg("Not supported yet"))
+                  "docs" -> do_action.alert(1, msg("Not supported yet"))
+                  "export" -> do_action.alert(1, msg("Not supported yet"))
+                  "fix" -> do_action.alert(1, msg("Not supported yet"))
+                  "format" -> do_action.alert(1, msg("Not supported yet"))
+                  "hex" -> do_action.alert(1, msg("Not supported yet"))
+                  "new" -> do_action.alert(1, msg("Not supported yet"))
+                  "publish" -> do_action.alert(1, msg("Not supported yet"))
+                  "remove" -> do_action.alert(1, msg("Not supported yet"))
+                  "run" -> action_run(path, msg)
+                  "test" -> action_test(path, msg)
+                  "update" -> do_action.do_action(["update", "gleam"], path)
+                  "help" -> do_action.do_action(["help", "gleam"], path)
+                  "Cancel" -> Nil
+                  _ -> do_action.alert(1, out)
                }
             }
          }
@@ -61,8 +77,8 @@ pub fn actions(path: string, msg: fn(String) -> String) -> Nil {
    }
 }
 
-fn action_add(msg: fn(String) -> String) -> Nil {
-   let out: Result(String, #(Int, String)) =
+fn action_add(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
       gu.zenity
       |> gu.new_forms()
       |> gu.set_text(msg("Add new project dependencies"))
@@ -72,29 +88,103 @@ fn action_add(msg: fn(String) -> String) -> Nil {
          values: [msg("no"), msg("yes")],
       )
       |> gu.set_separator("|")
-      |> gu.show(err: False)
+      |> gu.show_in(path, err: False)
    case out {
       Ok(out) ->
          case gu.parse_list(out, "|") {
-            [packages, dev] -> do_action_add(packages, dev, msg)
-            _ -> alert.alert(1, msg("Invalid output: ") <> out)
+            [packages, dev] ->
+               do_action.do_action(
+                  ["add", "gleam"]
+                     |> gu.add_bool(dev == msg("yes"), "dev")
+                     |> gu.add_value(packages),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
          }
       Error(_) -> Nil
    }
 }
 
-fn do_action_add(
-   packages: String,
-   dev: String,
-   msg: fn(String) -> String,
-) -> Nil {
-   let out: Result(String, #(Int, String)) =
-      ["add", "gleam"]
-      |> gu.add_bool(dev == msg("yes"), "dev")
-      |> gu.add_value(packages)
-      |> gu.show(err: True)
+fn action_run(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Run the project"))
+      |> gu.add_entry(msg("Arguments"))
+      |> gu.add_combo_and_values(msg("The platform to target"), values: [
+         msg("unset"),
+         "erlang",
+         "javascript",
+      ])
+      |> gu.add_combo_and_values(msg("The runtime to target"), values: [
+         msg("unset"),
+         "nodejs",
+         "deno",
+         "bun",
+      ])
+      |> gu.add_entry(msg("The module to run"))
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
    case out {
-      Ok(val) -> alert.alert(0, val)
-      Error(err) -> alert.alert(err.0, err.1)
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [args, target, runtime, module] ->
+               do_action.do_action(
+                  ["run", "gleam"]
+                     |> gu.add_opt_if(target != msg("unset"), target, "target")
+                     |> gu.add_opt_if(
+                        runtime != msg("unset"),
+                        runtime,
+                        "runtime",
+                     )
+                     |> gu.add_opt_if(
+                        !string.is_empty(module),
+                        module,
+                        "module",
+                     )
+                     |> gu.add_value_if(!string.is_empty(args), args),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_test(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Run the project tests"))
+      |> gu.add_combo_and_values(msg("The platform to target"), values: [
+         msg("unset"),
+         "erlang",
+         "javascript",
+      ])
+      |> gu.add_combo_and_values(msg("The runtime to target"), values: [
+         msg("unset"),
+         "nodejs",
+         "deno",
+         "bun",
+      ])
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [target, runtime] ->
+               do_action.do_action(
+                  ["test", "gleam"]
+                     |> gu.add_opt_if(target != msg("unset"), target, "target")
+                     |> gu.add_opt_if(
+                        runtime != msg("unset"),
+                        runtime,
+                        "runtime",
+                     ),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
    }
 }
