@@ -32,14 +32,14 @@ fn actions(path: String, msg: fn(String) -> String) -> Nil {
       |> gu.add_extra_button("test")
       |> gu.add_extra_button("run")
       |> gu.add_extra_button("remove")
-      // |> gu.add_extra_button("publish")
+      |> gu.add_extra_button("publish")
       |> gu.add_extra_button("new")
       // |> gu.add_extra_button("hex")
       |> gu.add_extra_button("format")
       |> gu.add_extra_button("fix")
       // |> gu.add_extra_button("export")
-      // |> gu.add_extra_button("docs")
-      // |> gu.add_extra_button("deps")
+      |> gu.add_extra_button("docs")
+      |> gu.add_extra_button("deps")
       |> gu.add_extra_button("clean")
       |> gu.add_extra_button("check")
       |> gu.add_extra_button("build")
@@ -56,14 +56,14 @@ fn actions(path: String, msg: fn(String) -> String) -> Nil {
                   "build" -> action_build(path, msg)
                   "check" -> action_check(path, msg)
                   "clean" -> action_clean(path)
-                  // "deps" -> do_action.alert(1, msg("Not supported yet"))
-                  // "docs" -> do_action.alert(1, msg("Not supported yet"))
+                  "deps" -> action_deps(path, msg)
+                  "docs" -> action_docs(path, msg)
                   // "export" -> do_action.alert(1, msg("Not supported yet"))
                   "fix" -> do_action.do_action(["fix", "gleam"], path)
                   "format" -> action_format(path, msg)
                   // "hex" -> do_action.alert(1, msg("Not supported yet"))
                   "new" -> action_new.action_new(path, msg)
-                  // "publish" -> do_action.alert(1, msg("Not supported yet"))
+                  "publish" -> action_publish(path, msg)
                   "remove" -> action_remove(path, msg)
                   "run" -> action_run(path, msg)
                   "test" -> action_test(path, msg)
@@ -157,16 +157,14 @@ fn action_check(path: String, msg: fn(String) -> String) -> Nil {
       |> gu.set_separator("|")
       |> gu.show_in(path, err: False)
    case out {
-      Ok(out) ->
-         case gu.parse_list(out, "|") {
-            [target] ->
-               do_action.do_action(
-                  ["check", "gleam"]
-                     |> gu.add_opt_if(target != msg("unset"), target, "target"),
-                  path,
-               )
-            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
-         }
+      Ok(out) -> {
+         let target: String = gu.parse(out)
+         do_action.do_action(
+            ["check", "gleam"]
+               |> gu.add_opt_if(target != msg("unset"), target, "target"),
+            path,
+         )
+      }
       Error(_) -> Nil
    }
 }
@@ -178,6 +176,72 @@ fn action_clean(path: String) -> Nil {
    {
       Ok(_) -> Nil
       Error(err) -> do_action.alert(err.0, err.1)
+   }
+}
+
+fn action_deps(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Work with dependency packages"))
+      |> gu.add_combo_and_values(msg("Command"), values: [
+         "list", "download", "update",
+      ])
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         do_action.do_action([gu.parse(out), "deps", "gleam"], path)
+      }
+      Error(_) -> Nil
+   }
+}
+
+fn action_docs(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Render HTML documentation"))
+      |> gu.add_combo_and_values(msg("Command"), values: [
+         "build", "build --open", "publish", "remove",
+      ])
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse(out) {
+            "build" -> do_action.do_action(["build", "docs", "gleam"], path)
+            "build --open" ->
+               do_action.do_action(["--open", "build", "docs", "gleam"], path)
+            "publish" -> do_action.do_action(["publish", "docs", "gleam"], path)
+            "remove" -> action_docs_remove(path, msg)
+            _ -> do_action.alert(1, msg("Not supported yet"))
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_docs_remove(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Remove HTML docs from HexDocs"))
+      |> gu.add_entry(msg("The name of the package"))
+      |> gu.add_entry(msg("The version of the docs to remove"))
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) -> {
+         case gu.parse_list(out, "|") {
+            [package, version] ->
+               do_action.do_action(
+                  ["remove", "docs", "gleam"]
+                     |> gu.add_opt(Some(package), "package")
+                     |> gu.add_opt(Some(version), "version"),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      }
+      Error(_) -> Nil
    }
 }
 
@@ -212,6 +276,31 @@ fn action_format(path: String, msg: fn(String) -> String) -> Nil {
                   Error(err) -> do_action.alert(err.0, err.1)
                }
             }
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_publish(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Publish the project to the Hex package manager"))
+      |> gu.add_combo_and_values("--replace", values: [msg("no"), msg("yes")])
+      |> gu.add_combo_and_values("--yes", values: [msg("yes"), msg("no")])
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [replace, yes] ->
+               do_action.do_action(
+                  ["publish", "gleam"]
+                     |> gu.add_bool(replace == msg("yes"), "replace")
+                     |> gu.add_bool(yes == msg("yes"), "yes"),
+                  path,
+               )
             _ -> do_action.alert(1, msg("Invalid output: ") <> out)
          }
       Error(_) -> Nil

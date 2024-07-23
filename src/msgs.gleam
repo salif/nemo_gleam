@@ -20,6 +20,7 @@ pub fn get_msg() -> fn(String) -> String {
             #("unset", "незададено"),
             #("Usage:", "Използване:"),
             #("Commands:", "Команди:"),
+            #("Command", "Команда"),
             #("Actions", "Действия"),
             #("Gleam Actions", "Gleam Действия"),
             #("Not supported yet", "Все още не се поддържа"),
@@ -71,6 +72,27 @@ pub fn get_msg() -> fn(String) -> String {
             #(
                "Type check the project",
                "Проверка на типовете на проекта",
+            ),
+            #(
+               "Work with dependency packages",
+               "Работа с пакети на зависимости",
+            ),
+            #(
+               "Render HTML documentation",
+               "Рендериране на HTML документация",
+            ),
+            #(
+               "Remove HTML docs from HexDocs",
+               "Премахване на HTML документацията от HexDocs",
+            ),
+            #("The name of the package", "Името на пакета"),
+            #(
+               "The version of the docs to remove",
+               "Версия на документация за премахване",
+            ),
+            #(
+               "Publish the project to the Hex package manager",
+               "Публикуване на проекта в Hex",
             ),
          ]),
       ])
