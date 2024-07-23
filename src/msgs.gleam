@@ -63,6 +63,15 @@ pub fn get_msg() -> fn(String) -> String {
                "Run the project tests",
                "Стартиране на тестовете на проекта",
             ),
+            #("Build the project", "Компилиране на проекта"),
+            #(
+               "Emit compile time warnings as errors",
+               "Излъчване на предупрежденията като грешки",
+            ),
+            #(
+               "Type check the project",
+               "Проверка на типовете на проекта",
+            ),
          ]),
       ])
    fn(str: String) -> String { aham.get(msgs, str) }

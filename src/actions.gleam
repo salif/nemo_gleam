@@ -13,7 +13,7 @@ pub fn run(args: List(String), msg: fn(String) -> String) -> Nil {
    }
 }
 
-pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
+fn actions(path: String, msg: fn(String) -> String) -> Nil {
    let out: gu.GuResult =
       gu.zenity
       |> gu.new_question()
@@ -41,8 +41,8 @@ pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
       // |> gu.add_extra_button("docs")
       // |> gu.add_extra_button("deps")
       |> gu.add_extra_button("clean")
-      // |> gu.add_extra_button("check")
-      // |> gu.add_extra_button("build")
+      |> gu.add_extra_button("check")
+      |> gu.add_extra_button("build")
       |> gu.add_extra_button("add")
       |> gu.set_timeout(30)
       |> gu.show_in(path, err: False)
@@ -53,8 +53,8 @@ pub fn actions(path: String, msg: fn(String) -> String) -> Nil {
             False -> {
                case gu.parse(out) {
                   "add" -> action_add(path, msg)
-                  // "build" -> do_action.alert(1, msg("Not supported yet"))
-                  // "check" -> do_action.alert(1, msg("Not supported yet"))
+                  "build" -> action_build(path, msg)
+                  "check" -> action_check(path, msg)
                   "clean" -> action_clean(path)
                   // "deps" -> do_action.alert(1, msg("Not supported yet"))
                   // "docs" -> do_action.alert(1, msg("Not supported yet"))
@@ -101,6 +101,68 @@ fn action_add(path: String, msg: fn(String) -> String) -> Nil {
                   ["add", "gleam"]
                      |> gu.add_bool(dev == msg("yes"), "dev")
                      |> gu.add_value_if(!string.is_empty(packages), packages),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_build(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Build the project"))
+      |> gu.add_combo_and_values(
+         msg("Emit compile time warnings as errors"),
+         values: [msg("no"), msg("yes")],
+      )
+      |> gu.add_combo_and_values(msg("The platform to target"), values: [
+         msg("unset"),
+         "erlang",
+         "javascript",
+      ])
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [warnings_as_errors, target] ->
+               do_action.do_action(
+                  ["build", "gleam"]
+                     |> gu.add_bool(
+                        warnings_as_errors == msg("yes"),
+                        "warnings-as-errors",
+                     )
+                     |> gu.add_opt_if(target != msg("unset"), target, "target"),
+                  path,
+               )
+            _ -> do_action.alert(1, msg("Invalid output: ") <> out)
+         }
+      Error(_) -> Nil
+   }
+}
+
+fn action_check(path: String, msg: fn(String) -> String) -> Nil {
+   let out: gu.GuResult =
+      gu.zenity
+      |> gu.new_forms()
+      |> gu.set_text(msg("Type check the project"))
+      |> gu.add_combo_and_values(msg("The platform to target"), values: [
+         msg("unset"),
+         "erlang",
+         "javascript",
+      ])
+      |> gu.set_separator("|")
+      |> gu.show_in(path, err: False)
+   case out {
+      Ok(out) ->
+         case gu.parse_list(out, "|") {
+            [target] ->
+               do_action.do_action(
+                  ["check", "gleam"]
+                     |> gu.add_opt_if(target != msg("unset"), target, "target"),
                   path,
                )
             _ -> do_action.alert(1, msg("Invalid output: ") <> out)
