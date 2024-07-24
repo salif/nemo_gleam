@@ -5,9 +5,14 @@
 
 ## Install
 
-Requires [zenity](https://gitlab.gnome.org/GNOME/zenity).
+Requires [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
+
+### Build from source
 
 ```sh
+git clone https://github.com/salif/nemo_gleam.git
+cd nemo_gleam
+
 gleam export erlang-shipment
 
 # Install to ~/.local/
@@ -18,6 +23,14 @@ gleam run -m install -- system
 # or
 # Instal to $DESTDIR
 gleam run -m install -- system destdir "$DESTDIR"
+```
+
+### Arch Linux
+
+It's available through the Arch User Repository as package `nemo-gleam`. You can use your prefered helper to install it.
+
+```sh
+yay -S nemo_gleam
 ```
 
 ## CLI

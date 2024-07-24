@@ -44,7 +44,7 @@ fn actions(path: String, msg: fn(String) -> String) -> Nil {
       |> gu.add_extra_button("check")
       |> gu.add_extra_button("build")
       |> gu.add_extra_button("add")
-      |> gu.set_timeout(30)
+      |> gu.set_timeout(120)
       |> gu.show_in(path, err: False)
    case out {
       Ok(out) | Error(#(_, out)) -> {
