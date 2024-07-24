@@ -16,18 +16,18 @@ cd nemo_gleam
 gleam export erlang-shipment
 
 # Install to ~/.local/
-gleam run -m install
+gleam run -- self-install
 # or
 # Install to /usr/
-gleam run -m install -- system
+gleam run -- self-install system
 # or
-# Instal to $DESTDIR
-gleam run -m install -- system destdir "$DESTDIR"
+# Install to $DESTDIR
+gleam run -- self-install system destdir "$DESTDIR"
 ```
 
 ### Arch Linux
 
-It's available through the Arch User Repository as package `nemo-gleam`. You can use your prefered helper to install it.
+It's available through the Arch User Repository as package `nemo_gleam`. You can use your prefered helper to install it.
 
 ```sh
 yay -S nemo_gleam
