@@ -20,9 +20,6 @@ gleam run -- self-install
 # or
 # Install to /usr/
 gleam run -- self-install system
-# or
-# Install to $DESTDIR
-gleam run -- self-install system destdir "$DESTDIR"
 ```
 
 ### Arch Linux

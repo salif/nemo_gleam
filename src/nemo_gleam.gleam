@@ -1,18 +1,16 @@
-import action_new
 import actions
 import argv
-import do_action
 import install
 import msgs
 
 pub fn main() {
    let msg: fn(String) -> String = msgs.get_msg()
    case argv.load().arguments {
-      ["new", ..rest] -> action_new.run(rest, msg)
+      ["new", ..rest] -> actions.run_new(rest, msg)
       ["actions", ..rest] -> actions.run(rest, msg)
       ["self-install", ..rest] -> install.run(rest)
       _ ->
-         do_action.alert(
+         actions.alert(
             0,
             msg("Usage:")
                <> " gleam-action <COMMAND>"

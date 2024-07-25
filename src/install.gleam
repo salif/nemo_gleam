@@ -20,7 +20,9 @@ pub const dir_system_licenses: String = "/usr/share/licenses"
 
 pub const arg_target_system: String = "system"
 
-pub fn run(args: List(String)) -> Nil {
+// gleam run -- self-install system destdir "$DESTDIR"
+
+pub fn run(args: List(String)) -> Bool {
    let target_system: Bool = case args {
       ["system", ..] -> True
       _ -> False
@@ -32,7 +34,7 @@ pub fn run(args: List(String)) -> Nil {
    }
 
    let rezult: Result(Nil, String) =
-      case dir_dest == "" && !target_system {
+      case string.is_empty(dir_dest) && !target_system {
          True ->
             case envoy.get("HOME") {
                Ok(val) -> Ok(val)
@@ -73,8 +75,12 @@ pub fn run(args: List(String)) -> Nil {
    case rezult {
       Error(err) -> {
          io.println_error("Error: " <> err)
+         False
       }
-      Ok(_) -> io.println("Done!")
+      Ok(_) -> {
+         io.println("Done!")
+         True
+      }
    }
 }
 
