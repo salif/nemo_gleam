@@ -8,6 +8,7 @@ pub fn main() {
    case argv.load().arguments {
       ["new", ..rest] -> actions.run_new(rest, msg)
       ["actions", ..rest] -> actions.run(rest, msg)
+      ["action", ..rest] -> actions.run_action(rest, msg)
       ["self-install", ..rest] -> install.run(rest)
       _ ->
          actions.alert(
@@ -19,7 +20,9 @@ pub fn main() {
                <> "\n  new\t\t"
                <> msg("Create a new project")
                <> "\n  actions\t\t"
-               <> msg("Actions"),
+               <> msg("Actions")
+               <> "\n  action\t\t"
+               <> msg("Action"),
          )
    }
 }

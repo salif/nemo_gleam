@@ -24,9 +24,11 @@ pub fn get_msg() -> fn(String) -> String {
             #("Command", "Команда"),
             #("Select a command", "Изберете команда"),
             #("Actions", "Действия"),
+            #("Action", "Действие"),
             #("Gleam Actions", "Gleam Действия"),
             #("Not supported yet", "Все още не се поддържа"),
-            #("Invalid input: ", "Невалиден вход: "),
+            #("Invalid input", "Невалиден вход"),
+            #("Invalid action", "Невалидно действие"),
             #(
                "Add new project dependencies",
                "Добавяне на нови зависимости",

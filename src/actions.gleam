@@ -21,6 +21,13 @@ pub fn run_new(args: List(String), msg: fn(String) -> String) -> Bool {
    }
 }
 
+pub fn run_action(args: List(String), msg: fn(String) -> String) -> Bool {
+   case args {
+      [action, path, ..] -> actions_action(action, path, msg)
+      _ -> alert(0, msg("Usage:") <> " gleam-action action <ACTION> <PATH>")
+   }
+}
+
 pub fn alert(alert_type: Int, text: String) -> Bool {
    gu.zenity
    |> gu.add_value(case alert_type {
@@ -46,7 +53,7 @@ pub fn do_action(cmd: List(String), path: String) -> Bool {
 }
 
 pub fn do_action_alert(value, msg) -> Bool {
-   alert(1, msg("Invalid input: ") <> string.inspect(value))
+   alert(1, msg("Invalid input") <> ": " <> string.inspect(value))
 }
 
 fn check_env(msg: fn(String) -> String) -> Result(Nil, String) {
@@ -97,33 +104,39 @@ fn actions(path: String, msg: fn(String) -> String) -> Bool {
    |> fn(answer: String) -> Bool {
       case string.is_empty(answer) {
          True -> False
-         False -> {
-            case answer {
-               "add" -> action_add(path, msg)
-               "build" -> action_build(path, msg)
-               "check" -> action_check(path, msg)
-               "clean" -> action_clean(path)
-               "deps" -> action_deps(path, msg)
-               "docs" -> action_docs(path, msg)
-               "export" -> action_export(path, msg)
-               "fix" -> do_action(gu.cmd([gleam_cmd, "fix"]), path)
-               "format" -> action_format(path, msg)
-               "hex" -> action_hex(path, msg)
-               "new" -> action_new(path, msg)
-               "publish" -> action_publish(path, msg)
-               "remove" -> action_remove(path, msg)
-               "run" -> action_run(path, msg)
-               "test" -> action_test(path, msg)
-               "update" -> do_action(gu.cmd([gleam_cmd, "update"]), path)
-               "help" -> do_action(gu.cmd([gleam_cmd, "help"]), path)
-               d ->
-                  case d == msg("Close") {
-                     True -> False
-                     False -> alert(1, d)
-                  }
+         False ->
+            case answer == msg("Close") {
+               True -> False
+               False -> actions_action(answer, path, msg)
             }
-         }
       }
+   }
+}
+
+fn actions_action(
+   action: String,
+   path: String,
+   msg: fn(String) -> String,
+) -> Bool {
+   case action {
+      "add" -> action_add(path, msg)
+      "build" -> action_build(path, msg)
+      "check" -> action_check(path, msg)
+      "clean" -> action_clean(path)
+      "deps" -> action_deps(path, msg)
+      "docs" -> action_docs(path, msg)
+      "export" -> action_export(path, msg)
+      "fix" -> do_action(gu.cmd([gleam_cmd, "fix"]), path)
+      "format" -> action_format(path, msg)
+      "hex" -> action_hex(path, msg)
+      "new" -> action_new(path, msg)
+      "publish" -> action_publish(path, msg)
+      "remove" -> action_remove(path, msg)
+      "run" -> action_run(path, msg)
+      "test" -> action_test(path, msg)
+      "update" -> do_action(gu.cmd([gleam_cmd, "update"]), path)
+      "help" -> do_action(gu.cmd([gleam_cmd, "help"]), path)
+      _ -> alert(1, msg("Invalid action") <> ": " <> action)
    }
 }
 
