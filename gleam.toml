@@ -1,5 +1,5 @@
 name = "nemo_gleam"
-version = "1.1.0"
+version = "1.2.0"
 
 description = "Nemo extension for Gleam"
 licences = ["Apache-2.0"]

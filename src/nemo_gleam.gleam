@@ -7,8 +7,9 @@ pub fn main() {
    let msg: fn(String) -> String = msgs.get_msg()
    case argv.load().arguments {
       ["new", ..rest] -> actions.run_new(rest, msg)
-      ["actions", ..rest] -> actions.run(rest, msg)
       ["action", ..rest] -> actions.run_action(rest, msg)
+      ["actions", ..rest] -> actions.run(rest, msg)
+      ["list", ..rest] -> actions.run_actions_list(rest, msg)
       ["self-install", ..rest] -> install.run(rest)
       _ ->
          actions.alert(
@@ -20,6 +21,8 @@ pub fn main() {
                <> "\n  new\t\t"
                <> msg("Create a new project")
                <> "\n  actions\t\t"
+               <> msg("Actions")
+               <> "\n  list\t\t"
                <> msg("Actions")
                <> "\n  action\t\t"
                <> msg("Action"),

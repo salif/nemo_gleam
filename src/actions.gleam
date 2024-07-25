@@ -14,6 +14,13 @@ pub fn run(args: List(String), msg: fn(String) -> String) -> Bool {
    }
 }
 
+pub fn run_actions_list(args: List(String), msg: fn(String) -> String) -> Bool {
+   case list.first(args) {
+      Ok(path) -> actions_list(path, msg)
+      Error(Nil) -> alert(0, msg("Usage:") <> " gleam-action list <PATH>")
+   }
+}
+
 pub fn run_new(args: List(String), msg: fn(String) -> String) -> Bool {
    case list.first(args) {
       Ok(path) -> action_new(path, msg)
@@ -42,7 +49,7 @@ pub fn alert(alert_type: Int, text: String) -> Bool {
       ellipsize: False,
    )
    |> gu.show(True)
-   |> result.is_ok
+   |> result.is_ok()
 }
 
 pub fn do_action(cmd: List(String), path: String) -> Bool {
@@ -111,6 +118,49 @@ fn actions(path: String, msg: fn(String) -> String) -> Bool {
             }
       }
    }
+}
+
+fn actions_list(path: String, msg: fn(String) -> String) -> Bool {
+   gu.zenity
+   |> gu.new_list()
+   |> gu.set_title(msg("Gleam Actions"))
+   |> gu.set_text(msg("Select a command"))
+   |> gu.set_height(700)
+   |> gu.set_separator("|")
+   |> gu.add_option_bool(True, "hide-header")
+   |> gu.add_column("Command")
+   |> gu.add_column("Description")
+   |> gu.add_row(["add", msg("Add new project dependencies")])
+   |> gu.add_row(["build", msg("Build the project")])
+   |> gu.add_row(["check", msg("Type check the project")])
+   |> gu.add_row(["clean", msg("Clean build artifacts")])
+   |> gu.add_row(["deps", msg("Work with dependency packages")])
+   |> gu.add_row(["docs", msg("Render HTML documentation")])
+   |> gu.add_row([
+      "export",
+      msg("Export something useful from the Gleam project"),
+   ])
+   |> gu.add_row(["fix", msg("Rewrite deprecated Gleam code")])
+   |> gu.add_row(["format", msg("Format source code")])
+   |> gu.add_row(["hex", msg("Work with the Hex package manager")])
+   |> gu.add_row(["new", msg("Create a new project")])
+   |> gu.add_row([
+      "publish",
+      msg("Publish the project to the Hex package manager"),
+   ])
+   |> gu.add_row(["remove", msg("Remove project dependencies")])
+   |> gu.add_row(["run", msg("Run the project")])
+   |> gu.add_row(["test", msg("Run the project tests")])
+   |> gu.add_row([
+      "update",
+      msg("Update dependency packages to their latest versions"),
+   ])
+   |> gu.add_row(["help", msg("Print help")])
+   |> gu.prompt_in(path)
+   |> result.map(fn(answer: String) -> Bool {
+      actions_action(answer, path, msg)
+   })
+   |> result.is_ok()
 }
 
 fn actions_action(
