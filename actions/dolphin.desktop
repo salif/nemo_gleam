@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+X-KDE-MaxNumberOfUrls=1
+MimeType=inode/directory;
+Actions=actions;
+Type=Service
+
+[Desktop Action actions]
+Name=Gleam Actions
+Name[bg]=Gleam Действия
+Icon=view-compact
+Exec=gleam-action actions "%u"

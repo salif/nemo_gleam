@@ -1,7 +1,7 @@
 name = "nemo_gleam"
 version = "1.2.0"
 
-description = "Nemo extension for Gleam"
+description = "GUI extension for Gleam development"
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "salif", repo = "nemo_gleam" }
 

@@ -1,7 +1,7 @@
 import actions
 import argv
-import install
 import msgs
+import self_install
 
 pub fn main() {
    let msg: fn(String) -> String = msgs.get_msg()
@@ -10,7 +10,7 @@ pub fn main() {
       ["action", ..rest] -> actions.run_action(rest, msg)
       ["actions", ..rest] -> actions.run(rest, msg)
       ["list", ..rest] -> actions.run_actions_list(rest, msg)
-      ["self-install", ..rest] -> install.run(rest)
+      ["self-install", ..rest] -> self_install.run(rest)
       _ ->
          actions.alert(
             0,

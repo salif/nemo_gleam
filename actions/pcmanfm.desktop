@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Action
+Profiles=actions
+Name=Gleam Actions
+Name[bg]=Gleam Действия
+Icon=view-compact
+ 
+[X-Action-Profile actions]
+MimeTypes=inode/directory;
+Exec=gleam-action actions %f
