@@ -80,8 +80,49 @@ fn install_files(
    dir_lib: String,
    dir_licenses: String,
 ) -> Result(Nil, simplifile.FileError) {
-   io.println("Installing actions: " <> dir_actions)
-   simplifile.create_directory_all(dir_actions <> "/nemo/actions/")
+   let dir_source_erlang_exists = case
+      simplifile.is_directory("./build/erlang-shipment")
+   {
+      Ok(val) -> val
+      Error(_) -> False
+   }
+   let dir_source_js_exists = case
+      simplifile.is_directory("./build/javascript-prod")
+   {
+      Ok(val) -> val
+      Error(_) -> False
+   }
+   case dir_source_erlang_exists {
+      True -> Ok(Nil)
+      False -> Error(simplifile.Enoent)
+   }
+   |> result.try(fn(_) {
+      io.println("Installing erlang-shipment: " <> dir_lib)
+      simplifile.create_directory_all(dir_lib)
+   })
+   |> result.try(fn(_) {
+      let _ = simplifile.delete(dir_lib <> "/nemo_gleam")
+      simplifile.copy_directory(
+         "./build/erlang-shipment",
+         dir_lib <> "/nemo_gleam",
+      )
+   })
+   |> result.try(fn(_) {
+      case dir_source_js_exists {
+         True -> {
+            let _ = simplifile.delete(dir_lib <> "/nemo_gleam_js")
+            simplifile.copy_directory(
+               "./build/javascript-prod",
+               dir_lib <> "/nemo_gleam_js",
+            )
+         }
+         False -> Ok(Nil)
+      }
+   })
+   |> result.try(fn(_) {
+      io.println("Installing actions: " <> dir_actions)
+      simplifile.create_directory_all(dir_actions <> "/nemo/actions/")
+   })
    |> result.try(fn(_) {
       simplifile.create_directory_all(dir_actions <> "/kio/servicemenus")
    })
@@ -123,15 +164,21 @@ fn install_files(
       simplifile.set_permissions_octal(dir_bin <> "/gleam-action", 0o755)
    })
    |> result.try(fn(_) {
-      io.println("Installing erlang-shipment: " <> dir_lib)
-      simplifile.create_directory_all(dir_lib)
-   })
-   |> result.try(fn(_) {
-      let _ = simplifile.delete(dir_lib <> "/nemo_gleam")
-      simplifile.copy_directory(
-         "./build/erlang-shipment",
-         dir_lib <> "/nemo_gleam",
-      )
+      case dir_source_js_exists {
+         True -> {
+            simplifile.copy_file(
+               "./scripts/gleam-action-js.sh",
+               dir_bin <> "/gleam-action-js",
+            )
+            |> result.try(fn(_) {
+               simplifile.set_permissions_octal(
+                  dir_bin <> "/gleam-action-js",
+                  0o755,
+               )
+            })
+         }
+         False -> Ok(Nil)
+      }
    })
    |> result.try(fn(_) {
       simplifile.create_directory_all(dir_licenses <> "/nemo_gleam")

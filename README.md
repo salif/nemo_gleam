@@ -22,6 +22,20 @@ gleam export erlang-shipment
 ./build/erlang-shipment/entrypoint.sh run self-install system
 ```
 
+#### Optional JavaScript target
+
+```sh
+gleam build --target javascript
+find ./build/dev/javascript -type f -name \*.mjs -exec install -D {} ./build/javascript-prod/{} \;
+install -Dm755 ./scripts/gleam-action.mjs ./build/javascript-prod/entrypoint.mjs
+
+# Install to ~/.local/
+./build/erlang-shipment/entrypoint.sh run self-install
+# or
+# Install to /usr/
+./build/erlang-shipment/entrypoint.sh run self-install system
+```
+
 ### Arch Linux
 
 It's available through the Arch User Repository as package `nemo_gleam`. You can use your prefered helper to install it.
