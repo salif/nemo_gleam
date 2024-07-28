@@ -1,10 +1,19 @@
 import actions
+import aham
 import argv
+import locale
 import msgs
 import self_install
 
 pub fn main() {
-   let msg: fn(String) -> String = msgs.get_msg()
+   let msg: fn(String) -> String = fn(str: String) -> String {
+      aham.auto_add_bundle(
+         aham.new_with_values(),
+         locale.get_locale(),
+         msgs.all,
+      )
+      |> aham.get(str)
+   }
    case argv.load().arguments {
       ["new", ..rest] -> actions.run_new(rest, msg)
       ["action", ..rest] -> actions.run_action(rest, msg)

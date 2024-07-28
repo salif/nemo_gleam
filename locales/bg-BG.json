@@ -1,0 +1,246 @@
+[
+	{
+		"key": "Create a new project",
+		"value": "Създаване на нов проект"
+	},
+	{
+		"key": "Name of the project",
+		"value": "Име на проекта"
+	},
+	{
+		"key": "Skip git",
+		"value": "Без git"
+	},
+	{
+		"key": "Skip github",
+		"value": "Без github"
+	},
+	{
+		"key": "Template",
+		"value": "Шаблон"
+	},
+	{
+		"key": "Options",
+		"value": "Опции"
+	},
+	{
+		"key": "Close",
+		"value": "Затваряне"
+	},
+	{
+		"key": "no",
+		"value": "не"
+	},
+	{
+		"key": "yes",
+		"value": "да"
+	},
+	{
+		"key": "unset",
+		"value": "незададено"
+	},
+	{
+		"key": "Usage:",
+		"value": "Употреба:"
+	},
+	{
+		"key": "Commands:",
+		"value": "Команди:"
+	},
+	{
+		"key": "Command",
+		"value": "Команда"
+	},
+	{
+		"key": "Select a command",
+		"value": "Изберете команда"
+	},
+	{
+		"key": "Actions",
+		"value": "Действия"
+	},
+	{
+		"key": "Action",
+		"value": "Действие"
+	},
+	{
+		"key": "Gleam Actions",
+		"value": "Gleam Действия"
+	},
+	{
+		"key": "Not supported yet",
+		"value": "Все още не се поддържа"
+	},
+	{
+		"key": "Invalid input",
+		"value": "Невалиден вход"
+	},
+	{
+		"key": "Invalid action",
+		"value": "Невалидно действие"
+	},
+	{
+		"key": "Add new project dependencies",
+		"value": "Добавяне на нови зависимости"
+	},
+	{
+		"key": "The names of Hex packages to add",
+		"value": "Имената на Hex пакетите за добавяне"
+	},
+	{
+		"key": "Add the packages as dev-only dependencies",
+		"value": "Добавяне като само за разработчици"
+	},
+	{
+		"key": "Format source code",
+		"value": "Форматиране на кода"
+	},
+	{
+		"key": "Files to format",
+		"value": "Файлове за форматиране"
+	},
+	{
+		"key": "Read source from STDIN",
+		"value": "Четене на кода от STDIN"
+	},
+	{
+		"key": "Check if inputs are formatted without changing them",
+		"value": "Проверяване дали кодът е форматиран, без да го променя"
+	},
+	{
+		"key": "Remove project dependencies",
+		"value": "Премахване на зависимости"
+	},
+	{
+		"key": "The names of packages to remove",
+		"value": "Имената на пакетите за премахване"
+	},
+	{
+		"key": "Run the project",
+		"value": "Стартиране на проекта"
+	},
+	{
+		"key": "Arguments",
+		"value": "Аргументи"
+	},
+	{
+		"key": "The platform to target",
+		"value": "Целева платформа"
+	},
+	{
+		"key": "The runtime to target",
+		"value": "Целева среда за изпълнение"
+	},
+	{
+		"key": "The module to run",
+		"value": "Модул за изпълняване"
+	},
+	{
+		"key": "Run the project tests",
+		"value": "Стартиране на тестовете на проекта"
+	},
+	{
+		"key": "Build the project",
+		"value": "Компилиране на проекта"
+	},
+	{
+		"key": "Emit compile time warnings as errors",
+		"value": "Излъчване на предупрежденията като грешки"
+	},
+	{
+		"key": "Type check the project",
+		"value": "Проверка на типовете на проекта"
+	},
+	{
+		"key": "Work with dependency packages",
+		"value": "Работа с пакети на зависимости"
+	},
+	{
+		"key": "List all dependency packages",
+		"value": "Списък на всички пакети на зависимости"
+	},
+	{
+		"key": "Download all dependency packages",
+		"value": "Изтегляне на всички пакети на зависимости"
+	},
+	{
+		"key": "Update dependency packages to their latest versions",
+		"value": "Обновяване на пакетите на зависимости до най-новите им версии"
+	},
+	{
+		"key": "Render HTML documentation",
+		"value": "Рендериране на HTML документация"
+	},
+	{
+		"key": "Render HTML docs locally",
+		"value": "Локално рендериране на HTML документация"
+	},
+	{
+		"key": "Opens the docs in a browser after rendering",
+		"value": "Отваряне на документацията в браузър след рендериране"
+	},
+	{
+		"key": "Publish HTML docs to HexDocs",
+		"value": "Публикуване на HTML документацията в HexDocs"
+	},
+	{
+		"key": "Remove HTML docs from HexDocs",
+		"value": "Премахване на HTML документацията от HexDocs"
+	},
+	{
+		"key": "The name of the package",
+		"value": "Името на пакета"
+	},
+	{
+		"key": "The version of the docs to remove",
+		"value": "Версия на документация за премахване"
+	},
+	{
+		"key": "Publish the project to the Hex package manager",
+		"value": "Публикуване на проекта в Hex"
+	},
+	{
+		"key": "Export something useful from the Gleam project",
+		"value": "Експортиране на нещо полезно от проекта"
+	},
+	{
+		"key": "Precompiled Erlang, suitable for deployment",
+		"value": "Precompiled Erlang, suitable for deployment"
+	},
+	{
+		"key": "The package bundled into a tarball, suitable for publishing to Hex",
+		"value": "The package bundled into a tarball, suitable for publishing to Hex"
+	},
+	{
+		"key": "Information on the modules, functions, and types in the project in JSON format",
+		"value": "Информация за модулите, функциите и типовете в проекта в JSON формат"
+	},
+	{
+		"key": "The JavaScript prelude module",
+		"value": "The JavaScript prelude module"
+	},
+	{
+		"key": "The TypeScript prelude module",
+		"value": "The TypeScript prelude module"
+	},
+	{
+		"key": "The path to write the JSON file to",
+		"value": "Пътят за запис на JSON файла"
+	},
+	{
+		"key": "Work with the Hex package manager",
+		"value": "Работа с Hex"
+	},
+	{
+		"key": "Retire a release from Hex",
+		"value": "Оттегляне на издание от Hex"
+	},
+	{
+		"key": "Un-retire a release from Hex",
+		"value": "Отмяна на оттеглане на издание от Hex"
+	},
+	{
+		"key": "Revert a release from Hex",
+		"value": "Връщане на издание от Hex"
+	}
+]

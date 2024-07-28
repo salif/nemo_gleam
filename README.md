@@ -75,7 +75,7 @@ Commands:
 
 ### Translate
 
-Translations are located in [msgs.gleam](./src/msgs.gleam)
+Translations are located in the [locales](./locales/) folder.
 
 <!--
 ```sh
