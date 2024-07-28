@@ -14,7 +14,8 @@ function main(list) {
 		const language = lang(list[i])
 		const translations = require("./" + language.file + ".json")
 		out.push('   #("' + language.first + '", "' + language.second + '", [\n' +
-			translations.map(it => '      #("' + it.key + '", "' + it.value + '"),').join('\n') +
+			translations.sort((a, b) => a.key.localeCompare(b.key)).map(
+				it => '      #("' + it.key + '", "' + it.value + '"),').join('\n') +
 			'\n   ]),')
 	}
 	out.push("]")
