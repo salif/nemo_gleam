@@ -318,19 +318,13 @@ fn action_docs(path: String, msg: fn(String) -> String) -> Bool {
    |> gu.add_column("Command")
    |> gu.add_column("Description")
    |> gu.add_row(["build", msg("Render HTML docs locally")])
-   |> gu.add_row([
-      "build --open",
-      msg("Opens the docs in a browser after rendering"),
-   ])
    |> gu.add_row(["publish", msg("Publish HTML docs to HexDocs")])
    |> gu.add_row(["remove", msg("Remove HTML docs from HexDocs")])
    |> gu.prompt_in(path)
    |> result.map(fn(answer: String) -> Bool {
       let command: String = answer
       case command {
-         "build" -> do_action(gu.cmd([gleam_cmd, "docs", "build"]), path)
-         "build --open" ->
-            do_action(gu.cmd([gleam_cmd, "docs", "build", "--open"]), path)
+         "build" -> action_docs_build(path, msg)
          "publish" ->
             case check_env(msg) {
                Error(err) -> alert(1, err)
@@ -338,6 +332,37 @@ fn action_docs(path: String, msg: fn(String) -> String) -> Bool {
             }
          "remove" -> action_docs_remove(path, msg)
          _ -> alert(1, msg("Not supported yet"))
+      }
+   })
+   |> result.is_ok()
+}
+
+fn action_docs_build(path: String, msg: fn(String) -> String) -> Bool {
+   gu.zenity
+   |> gu.new_forms()
+   |> gu.set_title(msg("Render HTML docs locally"))
+   |> gu.set_text(msg("Options"))
+   |> gu.set_separator("|")
+   |> gu.add_combo_and_values(
+      msg("Opens the docs in a browser after rendering"),
+      values: [msg("no"), msg("yes")],
+   )
+   |> gu.add_combo_and_values(msg("The platform to target"), values: [
+      msg("unset"),
+      "erlang",
+      "javascript",
+   ])
+   |> gu.prompt_in(path)
+   |> result.map(fn(answer: String) -> Bool {
+      case string.split(answer, "|") {
+         [open, target] ->
+            do_action(
+               gu.cmd([gleam_cmd, "docs", "build"])
+                  |> gu.add_option_bool(open == msg("yes"), "open")
+                  |> gu.add_option_if(target != msg("unset"), target, "target"),
+               path,
+            )
+         value -> do_action_alert(value, msg)
       }
    })
    |> result.is_ok()
