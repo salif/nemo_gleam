@@ -5,7 +5,7 @@
 
 ## Install
 
-Requires [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
+Requires [Gleam](https://gleam.run) and [just](https://just.systems/) and runtime only: [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
 
 ### Build from source
 
@@ -13,16 +13,16 @@ Requires [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://ww
 git clone https://github.com/salif/nemo_gleam.git
 cd nemo_gleam
 
-gleam export erlang-shipment
+just make
 
 # (Optional) JavaScript target:
-# ./scripts/javascript-prod.sh
+# just make-js
 
 # Install to ~/.local/
-./build/erlang-shipment/entrypoint.sh run self-install
+just install-local
 # or
 # Install to /usr/
-./build/erlang-shipment/entrypoint.sh run self-install system
+just install
 ```
 
 ### Arch Linux
@@ -42,7 +42,7 @@ The extension will be installed for Nemo and Dolphin.
 If you use Nautilus file manager, additionally run this command:
 
 ```sh
-install -Dvm755 ./scripts/nautilus-caja.sh "$HOME"/.local/share/nautilus/scripts/gleam-actions
+just install-ext-nautilus
 ```
 
 #### Caja
@@ -50,7 +50,7 @@ install -Dvm755 ./scripts/nautilus-caja.sh "$HOME"/.local/share/nautilus/scripts
 If you use Caja file manager, additionally run this command:
 
 ```sh
-install -Dvm755 ./scripts/nautilus-caja.sh "$HOME"/.config/caja/scripts/gleam-actions
+just install-ext-caja
 ```
 
 #### PCManFM
@@ -58,7 +58,7 @@ install -Dvm755 ./scripts/nautilus-caja.sh "$HOME"/.config/caja/scripts/gleam-ac
 If you use PCMan file manager, additionally run this command:
 
 ```sh
-install -Dvm755 ./actions/pcmanfm.desktop "$HOME"/.local/share/file-manager/actions/gleam_actions.desktop
+just install-ext-pcmanfm
 ```
 
 ## CLI

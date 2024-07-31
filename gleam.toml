@@ -3,15 +3,15 @@ version = "1.2.0"
 
 description = "GUI extension for Gleam development"
 licences = ["Apache-2.0"]
-repository = { type = "github", user = "salif", repo = "nemo_gleam" }
+repository = {type = "github", user = "salif", repo = "nemo_gleam"}
 
 [dependencies]
-gleam_stdlib = ">= 0.34.0 and < 2.0.0"
-simplifile = ">= 2.0.1 and < 3.0.0"
-envoy = ">= 1.0.1 and < 2.0.0"
-argv = ">= 1.0.2 and < 2.0.0"
-gu = ">= 2.0.0 and < 3.0.0"
 aham = ">= 1.0.0 and < 2.0.0"
+argv = ">= 1.0.2 and < 2.0.0"
+envoy = ">= 1.0.1 and < 2.0.0"
+gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+gu = ">= 2.0.0 and < 3.0.0"
+simplifile = ">= 2.0.1 and < 3.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
