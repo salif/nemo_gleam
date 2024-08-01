@@ -803,3 +803,9 @@ fn action_test(path: String, msg: fn(String) -> String) -> Bool {
    })
    |> result.is_ok()
 }
+// fn if_(a: Bool, if_true: a, if_false: a) -> a {
+//    case a {
+//       True -> if_true
+//       False -> if_false
+//    }
+// }

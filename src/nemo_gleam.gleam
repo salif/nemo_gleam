@@ -3,7 +3,6 @@ import aham
 import argv
 import locale
 import msgs
-import self_install
 
 pub fn main() {
    let msg: fn(String) -> String = fn(str: String) -> String {
@@ -19,7 +18,6 @@ pub fn main() {
       ["action", ..rest] -> actions.run_action(rest, msg)
       ["actions", ..rest] -> actions.run(rest, msg)
       ["list", ..rest] -> actions.run_actions_list(rest, msg)
-      ["self-install", ..rest] -> self_install.run(rest)
       _ ->
          actions.alert(
             0,
