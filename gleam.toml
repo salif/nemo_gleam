@@ -3,7 +3,7 @@ version = "1.3.0"
 
 description = "GUI extension for Gleam development"
 licences = ["Apache-2.0"]
-repository = {type = "github", user = "salif", repo = "nemo_gleam"}
+repository = {type = "codeberg", user = "salif", repo = "nemo_gleam"}
 
 [dependencies]
 aham = ">= 1.0.0 and < 2.0.0"

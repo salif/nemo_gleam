@@ -10,7 +10,7 @@ Requires [Gleam](https://gleam.run) and [just](https://just.systems/) and runtim
 ### Build from source
 
 ```sh
-git clone https://github.com/salif/nemo_gleam.git
+git clone https://codeberg.org/salif/nemo_gleam.git
 cd nemo_gleam
 
 just make
