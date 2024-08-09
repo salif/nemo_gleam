@@ -5,7 +5,9 @@ pub const all: List(#(String, String, List(#(String, String)))) = [
       "bg",
       "BG",
       [
-         #("Action", "Действие"), #("Actions", "Действия"),
+         #("Action", "Действие"),
+         #("Actions (buttons)", "Действия (бутони)"),
+         #("Actions (list)", "Действия (списък)"),
          #(
             "Add new project dependencies",
             "Добавяне на нови зависимости",

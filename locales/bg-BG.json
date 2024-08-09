@@ -56,8 +56,12 @@
 		"value": "Изберете команда"
 	},
 	{
-		"key": "Actions",
-		"value": "Действия"
+		"key": "Actions (buttons)",
+		"value": "Действия (бутони)"
+	},
+	{
+		"key": "Actions (list)",
+		"value": "Действия (списък)"
 	},
 	{
 		"key": "Action",

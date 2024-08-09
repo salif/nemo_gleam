@@ -68,7 +68,9 @@ Usage: gleam-action <COMMAND>
 
 Commands:
   new       Create a new project
-  actions   Actions
+  actions   Actions (buttons)
+  list      Actions (list)
+  action    Action
 ```
 
 ## Contribute

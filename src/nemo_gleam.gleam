@@ -28,9 +28,9 @@ pub fn main() {
                <> "\n  new\t\t"
                <> msg("Create a new project")
                <> "\n  actions\t\t"
-               <> msg("Actions")
+               <> msg("Actions (buttons)")
                <> "\n  list\t\t"
-               <> msg("Actions")
+               <> msg("Actions (list)")
                <> "\n  action\t\t"
                <> msg("Action"),
          )
