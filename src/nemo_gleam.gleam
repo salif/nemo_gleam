@@ -5,34 +5,46 @@ import locale
 import msgs
 
 pub fn main() {
-   let msg: fn(String) -> String = fn(str: String) -> String {
-      aham.auto_add_bundle(
-         aham.new_with_values(),
-         locale.get_locale(),
-         msgs.all,
+   let cx =
+      actions.Cx(
+         msg: fn(str: String) -> String {
+            aham.auto_add_bundle(
+               aham.new_with_values(),
+               locale.get_locale(),
+               msgs.all,
+            )
+            |> aham.get(str)
+         },
+         path: ".",
+         gleam_cmd: "gleam",
+         do_log: True,
       )
-      |> aham.get(str)
-   }
-   case argv.load().arguments {
-      ["new", ..rest] -> actions.run_new(rest, msg)
-      ["action", ..rest] -> actions.run_action(rest, msg)
-      ["actions", ..rest] -> actions.run(rest, msg)
-      ["list", ..rest] -> actions.run_actions_list(rest, msg)
+   parse_args(cx, argv.load().arguments)
+}
+
+fn parse_args(cx: actions.Cx, args: List(String)) {
+   case args {
+      ["new", ..rest] -> actions.run_new(cx, rest)
+      ["action", ..rest] -> actions.run_action(cx, rest)
+      ["actions", ..rest] -> actions.run(cx, rest)
+      ["list", ..rest] -> actions.run_actions_list(cx, rest)
+      ["--gleam-cmd", gleam_cmd, ..rest] ->
+         parse_args(actions.Cx(..cx, gleam_cmd: gleam_cmd), rest)
       _ ->
          actions.alert(
             0,
-            msg("Usage:")
+            cx.msg("Usage:")
                <> " gleam-action <COMMAND>"
                <> "\n\n"
-               <> msg("Commands:")
+               <> cx.msg("Commands:")
                <> "\n  new\t\t"
-               <> msg("Create a new project")
+               <> cx.msg("Create a new project")
                <> "\n  actions\t\t"
-               <> msg("Actions (buttons)")
+               <> cx.msg("Actions (buttons)")
                <> "\n  list\t\t"
-               <> msg("Actions (list)")
+               <> cx.msg("Actions (list)")
                <> "\n  action\t\t"
-               <> msg("Action"),
+               <> cx.msg("Action"),
          )
    }
 }
