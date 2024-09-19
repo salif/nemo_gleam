@@ -1,5 +1,8 @@
 #!/usr/bin/just -f
 
+gleam_cmd := "gleam"
+# rm_cmd="gio trash"
+rm_cmd := "rm -rf"
 DESTDIR := ""
 HOMEDIR := "$HOME"
 dir_ext_nautilus := HOMEDIR / ".local/share/nautilus/scripts/gleam-actions"
@@ -14,16 +17,16 @@ _:
 	@just --list --unsorted
 
 make:
-	gleam export erlang-shipment
+	{{ gleam_cmd }} export erlang-shipment
 
 make-js:
-	gleam build --target javascript
+	{{ gleam_cmd }} build --target javascript
 	find ./build/dev/javascript -type f -name \*.mjs -exec install -D "{}" "./build/javascript-prod/{}" \;
 	install -Dm755 ./scripts/entrypoint.mjs ./build/javascript-prod/entrypoint.mjs
 
 make-locales:
 	node ./scripts/locales.js
-	gleam format ./src/msgs.gleam
+	{{ gleam_cmd }} format ./src/msgs.gleam
 
 [private]
 make-pkg:
@@ -32,13 +35,13 @@ make-pkg:
 		"cd /src && gleam export erlang-shipment && cd ./build/erlang-shipment && tar -czf /src/build/pkg/bin.tar.gz . && chown 1000:1000 /src/build/pkg/bin.tar.gz"
 
 install:
-	if [ ! -d ./build/erlang-shipment ]; then just make; fi
+	if [ ! -d ./build/erlang-shipment ]; then just gleam_cmd="{{ gleam_cmd }}" make; fi
 	mkdir -p "{{ DESTDIR }}/{{ dir_lib }}"
-	rm -rf "{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam"
+	{{ rm_cmd }} "{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam"
 	cp --preserve=mode -RdT ./build/erlang-shipment "{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam"
 
 	if [ -d ./build/javascript-prod ]; then \
-		rm -rf "{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam_js" && \
+		{{ rm_cmd }} "{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam_js" && \
 		cp --preserve=mode -RdT ./build/javascript-prod \
 			"{{ DESTDIR }}/{{ dir_lib }}/nemo_gleam_js"; fi
 
@@ -56,7 +59,7 @@ install:
 	install -Dvm644 ./LICENSE "{{ DESTDIR }}/{{ dir_licenses }}/LICENSE"
 
 install-local: && install-ext-nautilus install-ext-caja install-ext-pcmanfm
-	just DESTDIR="{{ HOMEDIR }}" dir_share=".local/share" dir_bin=".local/bin" dir_lib=".local/lib" \
+	just gleam_cmd="{{ gleam_cmd }}" rm_cmd="{{ rm_cmd }}" DESTDIR="{{ HOMEDIR }}" dir_share=".local/share" dir_bin=".local/bin" dir_lib=".local/lib" \
 		dir_licenses=".local/lib/nemo_gleam" install
 	@printf "\
 	{{ HOMEDIR }}/.local/bin/gleam-action\n\
@@ -81,16 +84,13 @@ install-ext-pcmanfm:
 [private]
 [confirm]
 uninstall-confirm:
-	cat "{{ HOMEDIR }}/.local/lib/nemo_gleam/uninstall.txt" | xargs rm -rf
+	cat "{{ HOMEDIR }}/.local/lib/nemo_gleam/uninstall.txt" | xargs {{ rm_cmd }}
 
 uninstall-local: && uninstall-confirm
-	@echo "Following files will be removed:"
+	@printf "Following files will be removed:\n"
 	@cat "{{ HOMEDIR }}/.local/lib/nemo_gleam/uninstall.txt"
 
-[private]
-format:
-	gleam format
 
 [private]
 run-actions:
-	gleam run -- actions .
+	{{ gleam_cmd }} run -- actions .

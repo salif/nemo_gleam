@@ -27,6 +27,10 @@ pub const all: List(#(String, String, List(#(String, String)))) = [
             "Създаване на нов проект",
          ),
          #(
+            "Don't print progress information",
+            "Без отпечатване на инфо за напредъка",
+         ),
+         #(
             "Download all dependency packages",
             "Изтегляне на всички пакети на зависимости",
          ),

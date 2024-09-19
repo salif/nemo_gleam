@@ -57,7 +57,7 @@ pub fn alert(alert_type: Int, text: String) -> Bool {
 
 fn do_action(cmd: List(String), cx: Cx) -> Bool {
    case cx.do_log {
-      True -> io.println(string.join(list.reverse(cmd), " "))
+      True -> io.println_error(string.join(list.reverse(cmd), " "))
       False -> Nil
    }
    case gu.show_in(cmd, cx.path, err: True) {
@@ -232,11 +232,15 @@ fn action_build(cx: Cx) -> Bool {
       "erlang",
       "javascript",
    ])
+   |> gu.add_combo_and_values(
+      cx.msg("Don't print progress information"),
+      values: [cx.msg("no"), cx.msg("yes")],
+   )
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) {
       case string.split(answer, "|") {
-         [warnings_as_errors, target] ->
+         [warnings_as_errors, target, no_print_progress] ->
             do_action(
                gu.cmd([cx.gleam_cmd, "build"])
                   |> gu.add_option_bool(
@@ -247,6 +251,10 @@ fn action_build(cx: Cx) -> Bool {
                      target != cx.msg("unset"),
                      target,
                      "target",
+                  )
+                  |> gu.add_option_bool(
+                     no_print_progress == cx.msg("yes"),
+                     "no-print-progress",
                   ),
                cx,
             )
@@ -753,12 +761,16 @@ fn action_run(cx: Cx) -> Bool {
       "deno",
       "bun",
    ])
+   |> gu.add_combo_and_values(
+      cx.msg("Don't print progress information"),
+      values: [cx.msg("no"), cx.msg("yes")],
+   )
    |> gu.add_entry(cx.msg("The module to run"))
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "|") {
-         [args, target, runtime, module] ->
+         [args, target, runtime, no_print_progress, module] ->
             do_action(
                gu.cmd([cx.gleam_cmd, "run"])
                   |> gu.add_option_if(
@@ -770,6 +782,10 @@ fn action_run(cx: Cx) -> Bool {
                      runtime != cx.msg("unset"),
                      runtime,
                      "runtime",
+                  )
+                  |> gu.add_option_bool(
+                     no_print_progress == cx.msg("yes"),
+                     "no-print-progress",
                   )
                   |> gu.add_option_if(
                      !string.is_empty(module),

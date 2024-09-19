@@ -5,7 +5,7 @@
 
 ## Install
 
-Requires [Gleam](https://gleam.run) and [just](https://just.systems/) and runtime only: [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
+Requires [Gleam](https://gleam.run) and [just](https://just.systems/) and runtime only [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
 
 ### Build from source
 

@@ -152,6 +152,10 @@
 		"value": "Излъчване на предупрежденията като грешки"
 	},
 	{
+		"key": "Don't print progress information",
+		"value": "Без отпечатване на инфо за напредъка"
+	},
+	{
 		"key": "Type check the project",
 		"value": "Проверка на типовете на проекта"
 	},
