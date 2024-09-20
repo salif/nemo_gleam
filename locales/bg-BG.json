@@ -72,16 +72,16 @@
 		"value": "Gleam Действия"
 	},
 	{
+		"key": "Select a Gleam project",
+		"value": "Изберете Gleam проект"
+	},
+	{
 		"key": "Not supported yet",
 		"value": "Все още не се поддържа"
 	},
 	{
 		"key": "Invalid input",
-		"value": "Невалиден вход"
-	},
-	{
-		"key": "Invalid action",
-		"value": "Невалидно действие"
+		"value": "Невалидни входни данни"
 	},
 	{
 		"key": "Add new project dependencies",

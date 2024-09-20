@@ -1,4 +1,5 @@
 import envoy
+import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
@@ -13,46 +14,93 @@ pub type Cx {
 pub fn run(cx: Cx, args: List(String)) -> Bool {
    case list.first(args) {
       Ok(path) -> actions(Cx(..cx, path: path))
-      Error(Nil) -> alert(0, cx.msg("Usage:") <> " gleam-action actions <PATH>")
+      Error(Nil) ->
+         path_prompt(Cx(..cx, path: "."))
+         |> result.map(actions(_))
+         |> result.unwrap_both()
    }
 }
 
 pub fn run_actions_list(cx: Cx, args: List(String)) -> Bool {
    case list.first(args) {
       Ok(path) -> actions_list(Cx(..cx, path: path))
-      Error(Nil) -> alert(0, cx.msg("Usage:") <> " gleam-action list <PATH>")
+      Error(Nil) ->
+         path_prompt(Cx(..cx, path: "."))
+         |> result.map(actions_list(_))
+         |> result.unwrap_both()
    }
 }
 
-pub fn run_new(cx: Cx, args: List(String)) -> Bool {
+pub fn run_action(cx: Cx, action: String, args: List(String)) -> Bool {
    case list.first(args) {
-      Ok(path) -> action_new(Cx(..cx, path: path))
-      Error(Nil) -> alert(0, cx.msg("Usage:") <> " gleam-action new <PATH>")
-   }
-}
-
-pub fn run_action(cx: Cx, args: List(String)) -> Bool {
-   case args {
-      [action, path, ..] -> actions_action(Cx(..cx, path: path), action)
-      _ -> alert(0, cx.msg("Usage:") <> " gleam-action action <ACTION> <PATH>")
+      Ok(path) -> actions_action(Cx(..cx, path: path), action)
+      Error(Nil) ->
+         path_prompt(Cx(..cx, path: "."))
+         |> result.map(actions_action(_, action))
+         |> result.unwrap_both()
    }
 }
 
 pub fn alert(alert_type: Int, text: String) -> Bool {
+   case
+      gu.zenity
+      |> gu.add_value(case alert_type {
+         0 -> gu.type_info
+         _ -> gu.type_error
+      })
+      |> gu.new_message_opts(
+         text: Some(text),
+         icon: None,
+         no_wrap: False,
+         no_markup: True,
+         ellipsize: False,
+      )
+      |> gu.show(False)
+   {
+      Error(err) ->
+         case err.0 == 1 && err.1 == "" {
+            True -> Nil
+            False -> io.println_error(int.to_string(alert_type) <> ": " <> text)
+         }
+      Ok(_) -> Nil
+   }
+   alert_type == 0
+}
+
+pub fn alert_usage(text: String) -> Bool {
    gu.zenity
-   |> gu.add_value(case alert_type {
-      0 -> gu.type_info
-      _ -> gu.type_error
-   })
+   |> gu.add_value(gu.type_info)
    |> gu.new_message_opts(
       text: Some(text),
       icon: None,
-      no_wrap: False,
+      no_wrap: True,
       no_markup: True,
       ellipsize: False,
    )
-   |> gu.show(True)
-   |> result.is_ok()
+   |> gu.show(False)
+   |> result.replace(True)
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
+}
+
+fn alert_gu_error(gu_error: #(Int, String)) -> Bool {
+   case gu_error.0 == 1 && gu_error.1 == "" {
+      True -> False
+      False ->
+         alert(gu_error.0, int.to_string(gu_error.0) <> ": " <> gu_error.1)
+   }
+}
+
+fn alert_invalid(cx: Cx, value: List(String)) -> Bool {
+   alert(1, cx.msg("Invalid input") <> ": " <> string.inspect(value))
+}
+
+fn alert_not_supported(cx: Cx, value: String) -> Bool {
+   alert(1, cx.msg("Not supported yet") <> ": " <> value)
+}
+
+fn alert_missing_env(cx: Cx) -> Bool {
+   alert(1, cx.msg("Missing HEXPM_USER, HEXPM_PASS or HEXPM_API_KEY"))
 }
 
 fn do_action(cmd: List(String), cx: Cx) -> Bool {
@@ -66,18 +114,49 @@ fn do_action(cmd: List(String), cx: Cx) -> Bool {
    }
 }
 
-fn do_action_alert(cx: Cx, value: List(String)) -> Bool {
-   alert(1, cx.msg("Invalid input") <> ": " <> string.inspect(value))
+fn do_action_and_ignore(cmd: List(String), cx: Cx) -> Bool {
+   case cx.do_log {
+      True -> io.println_error(string.join(list.reverse(cmd), " "))
+      False -> Nil
+   }
+   case gu.show_in(cmd, cx.path, err: True) {
+      Ok(_) -> True
+      Error(err) -> alert(err.0, err.1)
+   }
 }
 
-fn check_env(cx: Cx) -> Result(Nil, String) {
+fn check_env() -> Bool {
    let api_key: Result(String, Nil) = envoy.get("HEXPM_API_KEY")
    let user: Result(String, Nil) = envoy.get("HEXPM_USER")
    let pass: Result(String, Nil) = envoy.get("HEXPM_PASS")
    case result.is_ok(api_key), { result.is_ok(user) && result.is_ok(pass) } {
-      False, False ->
-         Error(cx.msg("Missing HEXPM_USER, HEXPM_PASS or HEXPM_API_KEY"))
-      _, _ -> Ok(Nil)
+      False, False -> False
+      _, _ -> True
+   }
+}
+
+fn path_prompt(cx: Cx) -> Result(Cx, Bool) {
+   gu.zenity
+   |> gu.new_file_selection(
+      filename: None,
+      multiple: False,
+      directory: True,
+      save: False,
+      separator: None,
+      file_filter: None,
+   )
+   |> gu.set_title(cx.msg("Select a Gleam project"))
+   |> gu.set_separator("|")
+   |> gu.prompt_in(cx.path)
+   |> fn(gu_result: gu.GuResult) -> Result(Cx, Bool) {
+      case gu_result {
+         Ok(answer) ->
+            case string.split(answer, "|") {
+               [path] -> Ok(Cx(..cx, path: path))
+               value -> Error(alert_invalid(cx, value))
+            }
+         Error(err) -> Error(alert_gu_error(err))
+      }
    }
 }
 
@@ -113,7 +192,7 @@ fn actions(cx: Cx) -> Bool {
    |> gu.add_extra_button("add")
    |> gu.set_timeout(120)
    |> gu.prompt_in(cx.path)
-   |> result.map_error(fn(err) { err.1 })
+   |> result.map_error(fn(err: #(Int, String)) { err.1 })
    |> result.unwrap_both()
    |> fn(answer: String) -> Bool {
       case string.is_empty(answer) {
@@ -164,8 +243,9 @@ fn actions_list(cx: Cx) -> Bool {
    ])
    |> gu.add_row(["help", cx.msg("Print help")])
    |> gu.prompt_in(cx.path)
-   |> result.map(fn(answer: String) -> Bool { actions_action(cx, answer) })
-   |> result.is_ok()
+   |> result.map(actions_action(cx, _))
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn actions_action(cx: Cx, action: String) -> Bool {
@@ -173,11 +253,11 @@ fn actions_action(cx: Cx, action: String) -> Bool {
       "add" -> action_add(cx)
       "build" -> action_build(cx)
       "check" -> action_check(cx)
-      "clean" -> action_clean(cx)
+      "clean" -> do_action_and_ignore(gu.cmd([cx.gleam_cmd, action]), cx)
       "deps" -> action_deps(cx)
       "docs" -> action_docs(cx)
       "export" -> action_export(cx)
-      "fix" -> do_action(gu.cmd([cx.gleam_cmd, "fix"]), cx)
+      "fix" -> do_action(gu.cmd([cx.gleam_cmd, action]), cx)
       "format" -> action_format(cx)
       "hex" -> action_hex(cx)
       "new" -> action_new(cx)
@@ -185,9 +265,9 @@ fn actions_action(cx: Cx, action: String) -> Bool {
       "remove" -> action_remove(cx)
       "run" -> action_run(cx)
       "test" -> action_test(cx)
-      "update" -> do_action(gu.cmd([cx.gleam_cmd, "update"]), cx)
-      "help" -> do_action(gu.cmd([cx.gleam_cmd, "help"]), cx)
-      _ -> alert(1, cx.msg("Invalid action") <> ": " <> action)
+      "update" -> do_action(gu.cmd([cx.gleam_cmd, action]), cx)
+      "help" -> do_action(gu.cmd([cx.gleam_cmd, action]), cx)
+      _ -> alert_not_supported(cx, action)
    }
 }
 
@@ -203,7 +283,7 @@ fn action_add(cx: Cx) -> Bool {
    )
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
-   |> result.map(fn(answer: String) {
+   |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "|") {
          [packages, dev] ->
             do_action(
@@ -212,10 +292,11 @@ fn action_add(cx: Cx) -> Bool {
                   |> gu.add_row(string.split(string.trim(packages), " ")),
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_build(cx: Cx) -> Bool {
@@ -238,7 +319,7 @@ fn action_build(cx: Cx) -> Bool {
    )
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
-   |> result.map(fn(answer: String) {
+   |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "|") {
          [warnings_as_errors, target, no_print_progress] ->
             do_action(
@@ -258,10 +339,11 @@ fn action_build(cx: Cx) -> Bool {
                   ),
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_check(cx: Cx) -> Bool {
@@ -284,18 +366,8 @@ fn action_check(cx: Cx) -> Bool {
          cx,
       )
    })
-   |> result.is_ok()
-}
-
-fn action_clean(cx: Cx) -> Bool {
-   case
-      gu.cmd([cx.gleam_cmd, "clean"])
-      |> gu.show_in(cx.path, err: True)
-   {
-      // No output
-      Ok(_) -> True
-      Error(err) -> alert(err.0, err.1)
-   }
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_deps(cx: Cx) -> Bool {
@@ -318,7 +390,8 @@ fn action_deps(cx: Cx) -> Bool {
       let command: String = answer
       do_action(gu.cmd([cx.gleam_cmd, "deps", command]), cx)
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_docs(cx: Cx) -> Bool {
@@ -339,15 +412,16 @@ fn action_docs(cx: Cx) -> Bool {
       case command {
          "build" -> action_docs_build(cx)
          "publish" ->
-            case check_env(cx) {
-               Error(err) -> alert(1, err)
-               Ok(_) -> do_action(gu.cmd([cx.gleam_cmd, "docs", "publish"]), cx)
+            case check_env() {
+               False -> alert_missing_env(cx)
+               True -> do_action(gu.cmd([cx.gleam_cmd, "docs", command]), cx)
             }
          "remove" -> action_docs_remove(cx)
-         _ -> alert(1, cx.msg("Not supported yet"))
+         _ -> alert_not_supported(cx, command)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_docs_build(cx: Cx) -> Bool {
@@ -379,10 +453,11 @@ fn action_docs_build(cx: Cx) -> Bool {
                   ),
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_docs_remove(cx: Cx) -> Bool {
@@ -395,9 +470,9 @@ fn action_docs_remove(cx: Cx) -> Bool {
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
-      case check_env(cx) {
-         Error(err) -> alert(1, err)
-         Ok(_) -> {
+      case check_env() {
+         False -> alert_missing_env(cx)
+         True -> {
             case string.split(answer, "|") {
                [package, version] ->
                   do_action(
@@ -406,12 +481,13 @@ fn action_docs_remove(cx: Cx) -> Bool {
                         |> gu.add_option(Some(version), "version"),
                      cx,
                   )
-               value -> do_action_alert(cx, value)
+               value -> alert_invalid(cx, value)
             }
          }
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_export(cx: Cx) -> Bool {
@@ -446,20 +522,45 @@ fn action_export(cx: Cx) -> Bool {
       let command: String = answer
       case command {
          "erlang-shipment" ->
-            do_action(gu.cmd([cx.gleam_cmd, "export", "erlang-shipment"]), cx)
+            do_action(gu.cmd([cx.gleam_cmd, "export", command]), cx)
          "hex-tarball" ->
-            do_action(gu.cmd([cx.gleam_cmd, "export", "hex-tarball"]), cx)
-         "javascript-prelude" -> {
-            alert(1, cx.msg("Not supported yet"))
-         }
-         "typescript-prelude" -> {
-            alert(1, cx.msg("Not supported yet"))
-         }
+            do_action(gu.cmd([cx.gleam_cmd, "export", command]), cx)
+         "javascript-prelude" -> action_export_prelude(cx, command)
+         "typescript-prelude" -> action_export_prelude(cx, command)
          "package-interface" -> action_export_package_interface(cx)
-         _ -> alert(1, cx.msg("Not supported yet"))
+         _ -> alert_not_supported(cx, command)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
+}
+
+fn action_export_prelude(cx: Cx, prelude: String) -> Bool {
+   do_action_and_ignore(
+      gu.cmd([
+         "sh",
+         "-euc",
+         cx.gleam_cmd
+            <> " export "
+            <> prelude
+            <> " | "
+            <> string.join(
+            gu.zenity
+               |> gu.new_text_info(
+                  filename: None,
+                  editable: True,
+                  font: None,
+                  checkbox: None,
+                  auto_scroll: True,
+               )
+               |> gu.set_title(prelude)
+               |> list.reverse(),
+            " ",
+         )
+            <> " | exit 0",
+      ]),
+      cx,
+   )
 }
 
 fn action_export_package_interface(cx: Cx) -> Bool {
@@ -479,7 +580,8 @@ fn action_export_package_interface(cx: Cx) -> Bool {
          cx,
       )
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_format(cx: Cx) -> Bool {
@@ -496,7 +598,7 @@ fn action_format(cx: Cx) -> Bool {
    )
    |> gu.set_separator("\n")
    |> gu.prompt_in(cx.path)
-   |> result.try(fn(answer: String) {
+   |> result.try(fn(answer: String) -> gu.GuResult {
       gu.zenity
       |> gu.new_file_selection(
          filename: None,
@@ -508,29 +610,25 @@ fn action_format(cx: Cx) -> Bool {
       )
       |> gu.prompt_in(cx.path)
       |> result.map(string.split(_, "|"))
-      |> result.map(fn(files: List(String)) {
+      |> result.map(fn(files: List(String)) -> String {
          string.join(files, " ") <> "\n" <> answer
       })
    })
    |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "\n") {
-         [files, stdin, check] -> {
-            case
+         [files, stdin, check] ->
+            do_action_and_ignore(
                gu.cmd([cx.gleam_cmd, "format"])
-               |> gu.add_option_bool(stdin == cx.msg("yes"), "stdin")
-               |> gu.add_option_bool(check == cx.msg("yes"), "check")
-               |> gu.add_row(string.split(files, " "))
-               |> gu.show_in(cx.path, err: True)
-            {
-               // No output
-               Ok(_) -> True
-               Error(err) -> alert(err.0, err.1)
-            }
-         }
-         value -> do_action_alert(cx, value)
+                  |> gu.add_option_bool(stdin == cx.msg("yes"), "stdin")
+                  |> gu.add_option_bool(check == cx.msg("yes"), "check")
+                  |> gu.add_row(string.split(files, " ")),
+               cx,
+            )
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_hex(cx: Cx) -> Bool {
@@ -552,10 +650,11 @@ fn action_hex(cx: Cx) -> Bool {
          "retire" -> action_hex_retire(cx)
          "unretire" -> action_hex_unretire(cx)
          "revert" -> action_hex_revert(cx)
-         _ -> alert(1, cx.msg("Not supported yet"))
+         _ -> alert_not_supported(cx, command)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_hex_retire(cx: Cx) -> Bool {
@@ -572,9 +671,9 @@ fn action_hex_retire(cx: Cx) -> Bool {
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
-      case check_env(cx) {
-         Error(err) -> alert(1, err)
-         Ok(_) -> {
+      case check_env() {
+         False -> alert_missing_env(cx)
+         True -> {
             case string.split(answer, "|") {
                [package, version, reason, message] ->
                   do_action(
@@ -585,12 +684,13 @@ fn action_hex_retire(cx: Cx) -> Bool {
                         |> gu.add_value_if(!string.is_empty(message), message),
                      cx,
                   )
-               value -> do_action_alert(cx, value)
+               value -> alert_invalid(cx, value)
             }
          }
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_hex_unretire(cx: Cx) -> Bool {
@@ -603,21 +703,22 @@ fn action_hex_unretire(cx: Cx) -> Bool {
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
-      case check_env(cx) {
-         Error(err) -> alert(1, err)
-         Ok(_) -> {
+      case check_env() {
+         False -> alert_missing_env(cx)
+         True -> {
             case string.split(answer, "|") {
                [package, version] ->
                   do_action(
                      gu.cmd([cx.gleam_cmd, "hex", "unretire", package, version]),
                      cx,
                   )
-               value -> do_action_alert(cx, value)
+               value -> alert_invalid(cx, value)
             }
          }
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_hex_revert(cx: Cx) -> Bool {
@@ -630,9 +731,9 @@ fn action_hex_revert(cx: Cx) -> Bool {
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
-      case check_env(cx) {
-         Error(err) -> alert(1, err)
-         Ok(_) -> {
+      case check_env() {
+         False -> alert_missing_env(cx)
+         True -> {
             case string.split(answer, "|") {
                [package, version] ->
                   do_action(
@@ -641,12 +742,13 @@ fn action_hex_revert(cx: Cx) -> Bool {
                         |> gu.add_option(Some(version), "version"),
                      cx,
                   )
-               value -> do_action_alert(cx, value)
+               value -> alert_invalid(cx, value)
             }
          }
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_new(cx: Cx) -> Bool {
@@ -669,7 +771,7 @@ fn action_new(cx: Cx) -> Bool {
    ])
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
-   |> result.map(fn(answer: String) {
+   |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "|") {
          [name, skip_git, skip_github, template] ->
             do_action(
@@ -688,10 +790,11 @@ fn action_new(cx: Cx) -> Bool {
                   |> gu.add_value(cx.path <> "/" <> name),
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_publish(cx: Cx) -> Bool {
@@ -704,9 +807,9 @@ fn action_publish(cx: Cx) -> Bool {
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
    |> result.map(fn(answer: String) -> Bool {
-      case check_env(cx) {
-         Error(err) -> alert(1, err)
-         Ok(_) -> {
+      case check_env() {
+         False -> alert_missing_env(cx)
+         True -> {
             case string.split(answer, "|") {
                [replace, yes] ->
                   do_action(
@@ -718,12 +821,13 @@ fn action_publish(cx: Cx) -> Bool {
                         |> gu.add_option_bool(yes == cx.msg("yes"), "yes"),
                      cx,
                   )
-               value -> do_action_alert(cx, value)
+               value -> alert_invalid(cx, value)
             }
          }
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_remove(cx: Cx) -> Bool {
@@ -741,7 +845,8 @@ fn action_remove(cx: Cx) -> Bool {
          cx,
       )
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_run(cx: Cx) -> Bool {
@@ -800,10 +905,11 @@ fn action_run(cx: Cx) -> Bool {
                   },
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }
 
 fn action_test(cx: Cx) -> Bool {
@@ -824,7 +930,7 @@ fn action_test(cx: Cx) -> Bool {
    ])
    |> gu.set_separator("|")
    |> gu.prompt_in(cx.path)
-   |> result.map(fn(answer: String) {
+   |> result.map(fn(answer: String) -> Bool {
       case string.split(answer, "|") {
          [target, runtime] ->
             do_action(
@@ -841,8 +947,9 @@ fn action_test(cx: Cx) -> Bool {
                   ),
                cx,
             )
-         value -> do_action_alert(cx, value)
+         value -> alert_invalid(cx, value)
       }
    })
-   |> result.is_ok()
+   |> result.map_error(alert_gu_error)
+   |> result.unwrap_both()
 }

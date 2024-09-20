@@ -1,11 +1,12 @@
-# GUI extension for Gleam development
+# Graphical user interface for Gleam development
 
 [![Package Version](https://img.shields.io/hexpm/v/nemo_gleam)](https://hex.pm/packages/nemo_gleam)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/nemo_gleam/)
 
 ## Install
 
-Requires [Gleam](https://gleam.run) and [just](https://just.systems/) and runtime only [Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/).
+Requires [Gleam](https://gleam.run) and [just](https://just.systems/) for development and
+[Zenity](https://gitlab.gnome.org/GNOME/zenity) and [Erlang](https://www.erlang.org/) for runtime.
 
 ### Build from source
 
@@ -27,7 +28,9 @@ just install
 
 ### Arch Linux
 
-It's available through the Arch User Repository as package `nemo_gleam`. You can use your prefered helper to install it.
+It's available through the Arch User Repository as package
+[nemo_gleam](https://aur.archlinux.org/packages/nemo_gleam).
+You can use your prefered helper to install it.
 
 ```sh
 yay -S nemo_gleam
@@ -67,10 +70,9 @@ just install-ext-pcmanfm
 Usage: gleam-action <COMMAND>
 
 Commands:
-  new       Create a new project
   actions   Actions (buttons)
   list      Actions (list)
-  action    Action
+  act       Action
 ```
 
 ## Contribute

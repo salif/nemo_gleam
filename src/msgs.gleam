@@ -47,8 +47,7 @@ pub const all: List(#(String, String, List(#(String, String)))) = [
          #(
             "Information on the modules, functions, and types in the project in JSON format",
             "Информация за модулите, функциите и типовете в проекта в JSON формат",
-         ), #("Invalid action", "Невалидно действие"),
-         #("Invalid input", "Невалиден вход"),
+         ), #("Invalid input", "Невалидни входни данни"),
          #(
             "List all dependency packages",
             "Списък на всички пакети на зависимости",
@@ -99,6 +98,7 @@ pub const all: List(#(String, String, List(#(String, String)))) = [
             "Run the project tests",
             "Стартиране на тестовете на проекта",
          ), #("Select a command", "Изберете команда"),
+         #("Select a Gleam project", "Изберете Gleam проект"),
          #("Skip git", "Без git"), #("Skip github", "Без github"),
          #("Template", "Шаблон"),
          #("The JavaScript prelude module", "The JavaScript prelude module"),

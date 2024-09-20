@@ -1,7 +1,7 @@
 name = "nemo_gleam"
 version = "1.4.0"
 
-description = "GUI extension for Gleam development"
+description = "Graphical user interface for Gleam development"
 licences = ["Apache-2.0"]
 repository = {type = "codeberg", user = "salif", repo = "nemo_gleam"}
 

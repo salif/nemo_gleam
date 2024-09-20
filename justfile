@@ -1,4 +1,4 @@
-#!/usr/bin/just -f
+#!/usr/bin/env -S just -f
 
 gleam_cmd := "gleam"
 # rm_cmd="gio trash"
@@ -93,4 +93,4 @@ uninstall-local: && uninstall-confirm
 
 [private]
 run-actions:
-	{{ gleam_cmd }} run -- actions .
+	{{ gleam_cmd }} run -- --gleam-cmd "{{ gleam_cmd }}" actions .
