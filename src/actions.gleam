@@ -41,17 +41,20 @@ pub fn run_action(cx: Cx, action: String, args: List(String)) -> Bool {
    }
 }
 
-pub fn alert(alert_type: Int, text: String) -> Bool {
+pub fn alert(
+   alert_type: Int,
+   text: String,
+   title: option.Option(String),
+) -> Bool {
    case
       gu.zenity
-      |> gu.add_value(case alert_type {
-         0 -> gu.type_info
-         _ -> gu.type_error
-      })
+      |> gu.add_option_bool(alert_type == 0, "info")
+      |> gu.add_option_bool(alert_type != 0, "error")
+      |> gu.add_option(title, "title")
       |> gu.new_message_opts(
          text: Some(text),
          icon: None,
-         no_wrap: False,
+         no_wrap: True,
          no_markup: True,
          ellipsize: False,
       )
@@ -67,9 +70,10 @@ pub fn alert(alert_type: Int, text: String) -> Bool {
    alert_type == 0
 }
 
-pub fn alert_usage(text: String) -> Bool {
+pub fn alert_usage(title: String, text: String) -> Bool {
    gu.zenity
-   |> gu.add_value(gu.type_info)
+   |> gu.new_info()
+   |> gu.set_title(title)
    |> gu.new_message_opts(
       text: Some(text),
       icon: None,
@@ -87,41 +91,57 @@ fn alert_gu_error(gu_error: #(Int, String)) -> Bool {
    case gu_error.0 == 1 && gu_error.1 == "" {
       True -> False
       False ->
-         alert(gu_error.0, int.to_string(gu_error.0) <> ": " <> gu_error.1)
+         alert(
+            gu_error.0,
+            int.to_string(gu_error.0) <> ": " <> gu_error.1,
+            None,
+         )
    }
 }
 
 fn alert_invalid(cx: Cx, value: List(String)) -> Bool {
-   alert(1, cx.msg("Invalid input") <> ": " <> string.inspect(value))
+   alert(
+      1,
+      cx.msg("Invalid input") <> ": [" <> string.join(value, "] [") <> "]",
+      None,
+   )
 }
 
 fn alert_not_supported(cx: Cx, value: String) -> Bool {
-   alert(1, cx.msg("Not supported yet") <> ": " <> value)
+   alert(1, cx.msg("Not supported yet") <> ": " <> value, None)
 }
 
 fn alert_missing_env(cx: Cx) -> Bool {
-   alert(1, cx.msg("Missing HEXPM_USER, HEXPM_PASS or HEXPM_API_KEY"))
+   alert(1, cx.msg("Missing HEXPM_USER, HEXPM_PASS or HEXPM_API_KEY"), None)
 }
 
 fn do_action(cmd: List(String), cx: Cx) -> Bool {
-   case cx.do_log {
-      True -> io.println_error(string.join(list.reverse(cmd), " "))
-      False -> Nil
-   }
-   case gu.show_in(cmd, cx.path, err: True) {
-      Ok(val) -> alert(0, val)
-      Error(err) -> alert(err.0, err.1)
-   }
+   do_action_and_ignore(cmd, cx, False)
 }
 
-fn do_action_and_ignore(cmd: List(String), cx: Cx) -> Bool {
+fn do_action_and_ignore(cmd: List(String), cx: Cx, ignore: Bool) -> Bool {
+   let cmd_rev: List(String) = list.reverse(cmd)
+   let cmd_line: String = "> " <> string.join(cmd_rev, " ") <> "\n\n"
    case cx.do_log {
-      True -> io.println_error(string.join(list.reverse(cmd), " "))
+      True -> io.println_error(cmd_line)
       False -> Nil
    }
    case gu.show_in(cmd, cx.path, err: True) {
-      Ok(_) -> True
-      Error(err) -> alert(err.0, err.1)
+      Ok(val) ->
+         case ignore {
+            True -> True
+            False -> {
+               let title: String =
+                  string.join(
+                     list.split_while(cmd_rev, fn(c: String) -> Bool {
+                        !string.starts_with(c, "-")
+                     }).0,
+                     " ",
+                  )
+               alert(0, cmd_line <> val, Some(title))
+            }
+         }
+      Error(err) -> alert(err.0, cmd_line <> err.1, None)
    }
 }
 
@@ -253,7 +273,7 @@ fn actions_action(cx: Cx, action: String) -> Bool {
       "add" -> action_add(cx)
       "build" -> action_build(cx)
       "check" -> action_check(cx)
-      "clean" -> do_action_and_ignore(gu.cmd([cx.gleam_cmd, action]), cx)
+      "clean" -> do_action_and_ignore(gu.cmd([cx.gleam_cmd, action]), cx, True)
       "deps" -> action_deps(cx)
       "docs" -> action_docs(cx)
       "export" -> action_export(cx)
@@ -560,6 +580,7 @@ fn action_export_prelude(cx: Cx, prelude: String) -> Bool {
             <> " | exit 0",
       ]),
       cx,
+      True,
    )
 }
 
@@ -623,6 +644,7 @@ fn action_format(cx: Cx) -> Bool {
                   |> gu.add_option_bool(check == cx.msg("yes"), "check")
                   |> gu.add_row(string.split(files, " ")),
                cx,
+               True,
             )
          value -> alert_invalid(cx, value)
       }

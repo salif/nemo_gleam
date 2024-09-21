@@ -11,15 +11,20 @@ Requires [Gleam](https://gleam.run) and [just](https://just.systems/) for develo
 ### Build from source
 
 ```sh
+# 1. Clone this git repository
 git clone https://codeberg.org/salif/nemo_gleam.git
 cd nemo_gleam
 
+# 2. Build the project
 just make
 
 # (Optional) JavaScript target:
-# just make-js
+just make-js
 
-# Install to ~/.local/
+# (Optional) A single executable file:
+just make-escript
+
+# 3. Install to ~/.local/
 just install-local
 # or
 # Install to /usr/

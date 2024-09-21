@@ -4,8 +4,10 @@ import argv
 import locale
 import msgs
 
+const bin: String = "gleam-action"
+
 pub fn main() -> Bool {
-   let cx =
+   let cx: actions.Cx =
       actions.Cx(
          msg: fn(str: String) -> String {
             aham.auto_add_bundle(
@@ -31,16 +33,19 @@ fn parse_args(cx: actions.Cx, args: List(String)) -> Bool {
          parse_args(actions.Cx(..cx, gleam_cmd: gleam_cmd), rest)
       _ ->
          actions.alert_usage(
-            cx.msg("Usage:")
-            <> " gleam-action <command>"
-            <> "\n\n"
-            <> cx.msg("Commands:")
-            <> "\n  actions <path>\t\t"
-            <> cx.msg("Actions (buttons)")
-            <> "\n  list <path>\t\t\t"
-            <> cx.msg("Actions (list)")
-            <> "\n  act <action>\t\t"
-            <> cx.msg("Action"),
+            cx.msg("Usage"),
+            cx.msg("Usage")
+               <> ": "
+               <> bin
+               <> " <command>"
+               <> "\n\n"
+               <> cx.msg("Commands:")
+               <> "\n  actions <path>\t\t"
+               <> cx.msg("Actions (buttons)")
+               <> "\n  list <path>\t\t\t"
+               <> cx.msg("Actions (list)")
+               <> "\n  act <action>\t\t"
+               <> cx.msg("Action"),
          )
    }
 }

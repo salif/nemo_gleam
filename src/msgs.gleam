@@ -139,7 +139,7 @@ pub const all: List(#(String, String, List(#(String, String)))) = [
          #(
             "Update dependency packages to their latest versions",
             "Обновяване на пакетите на зависимости до най-новите им версии",
-         ), #("Usage:", "Употреба:"),
+         ), #("Usage", "Употреба"),
          #(
             "Work with dependency packages",
             "Работа с пакети на зависимости",

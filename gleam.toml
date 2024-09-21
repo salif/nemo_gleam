@@ -5,6 +5,15 @@ description = "Graphical user interface for Gleam development"
 licences = ["Apache-2.0"]
 repository = {type = "codeberg", user = "salif", repo = "nemo_gleam"}
 
+# links = [
+#   {title = "Manual", href = "https://example.com"},
+# ]
+
+[documentation]
+pages = [
+  {title = "Manual (BG)", path = "manual-bg.html", source = "./manual/README.bg.md"},
+]
+
 gleam = ">= 1.5.0"
 
 [dependencies]
@@ -15,4 +24,5 @@ gleam_stdlib = ">= 0.34.0 and < 2.0.0"
 gu = ">= 2.0.0 and < 3.0.0"
 
 [dev-dependencies]
+gleescript = ">= 1.4.0 and < 2.0.0"
 gleeunit = ">= 1.0.0 and < 2.0.0"
